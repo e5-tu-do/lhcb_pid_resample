@@ -1,13 +1,12 @@
 #!/bin/env python
 
-from root_pandas import read_root
-from pandas import DataFrame
+# from root_pandas import read_root
+# from pandas import DataFrame
 import sys
 from ROOT import TFile
+import subprocess
+import re
 
-
-# the directory where the raw data for the PIDCalib package is located in the eos
-rawDataDirName = "/eos/lhcb/grid/prod/lhcb/calib/lhcb/calib/pid/CalibData/"
 
 def wrap_iter(it):
     elem = it.Next()
@@ -36,10 +35,14 @@ def get_data(data):
 
 
 def get_file_paths(particle, rawDataDirName): # particle can be P, Mu, Pi, K
+    print rawDataDirName
+    result = subprocess.check_output(["eos","ls",rawDataDirName])
+    print result[0]
     pass
 
 
 def make_NTuples(particle, targetDirName, rawDataDirName):
+    get_file_paths(particle,rawDataDirName)
     pass
 
 for fname in sys.argv[1:]:
@@ -47,11 +50,11 @@ for fname in sys.argv[1:]:
     ws = f.Get('JpsiCalib')
     data = ws.allData().front()
     table, vars = get_data(data)
-    df = DataFrame(table.T, columns=vars)
-    df.to_root('mu_sample.root', 'tree')
-    print('{} finished.'.format(fname))
+    # df = DataFrame(table.T, columns=vars)
+    # df.to_root('mu_sample.root', 'tree')
+    # print('{} finished.'.format(fname))
 
 
 
 for particle in ["P", "Mu", "Pi", "K"]:
-    make_NTuples(particle="P",targetDirName="/afs/some/workspace/", rawDataDirName=rawDataDirName)
+    make_NTuples(particle="P", targetDirName="/afs/some/workspace/", rawDataDirName=rawDataDirName)
