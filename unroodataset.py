@@ -5,6 +5,10 @@ from pandas import DataFrame
 import sys
 from ROOT import TFile
 
+
+# the directory where the raw data for the PIDCalib package is located in the eos
+rawDataDirName = "/eos/lhcb/grid/prod/lhcb/calib/lhcb/calib/pid/CalibData/"
+
 def wrap_iter(it):
     elem = it.Next()
     while elem:
@@ -30,6 +34,14 @@ def get_data(data):
         curr = data.get(idx)
     return ret, map(lambda x: x.GetName(), vars)
 
+
+def get_file_paths(particle, rawDataDirName): # particle can be P, Mu, Pi, K
+    pass
+
+
+def make_NTuples(particle, targetDirName, rawDataDirName):
+    pass
+
 for fname in sys.argv[1:]:
     f = TFile(fname)
     ws = f.Get('JpsiCalib')
@@ -40,3 +52,6 @@ for fname in sys.argv[1:]:
     print('{} finished.'.format(fname))
 
 
+
+for particle in ["P", "Mu", "Pi", "K"]:
+    make_NTuples(particle="P",targetDirName="/afs/some/workspace/", rawDataDirName=rawDataDirName)
