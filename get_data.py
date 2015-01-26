@@ -32,11 +32,16 @@ def get_data(data):
                 ret[idx, i] = var.getIndex()
     return ret, map(lambda x: x.GetName(), vars)
 
+
+outputLocation = sys.argv[1]
+
+print ("Saving nTuples to "+outputLocation)
+
 with open('raw_file_locations.json') as f:
     locations = json.load(f)
 
 for sample in locations:
-    output = '{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
+    output = outputLocation+'{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
     for input in sample['paths']:
         logging.info('Opening file {}'.format(input))
         f = TFile.Open(input)
@@ -47,4 +52,3 @@ for sample in locations:
         df = DataFrame(table, columns=vars)
         logging.info('Saving data to {}'.format(output))
         df.to_root(output)
-
