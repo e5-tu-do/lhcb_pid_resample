@@ -52,3 +52,4 @@ for sample in locations:
         df = DataFrame(table, columns=vars)
         logging.info('Saving data to {}'.format(output))
         df.to_root(output)
+        ws.Delete()
