@@ -39,8 +39,6 @@ class Resampler:
         self.columns = dependent + [target]
         self.edges = dep_bins + [target_bins]
 
-        logging.info('Learning to sample {} from {}'.format(target, ', '.join(dependent)))
-
         # Choose histogram size according to binning
         self.histogram = np.zeros(map(lambda x: len(x) - 1, self.edges))
 
@@ -54,7 +52,6 @@ class Resampler:
             # Bin data in N + 1 dimensions
             h , _ = np.histogramdd(chunk.as_matrix(), bins=self.edges)
             self.histogram += h
-            logging.info('Finished chunk {}'.format(i))
 
     def __call__(self, *args):
         idx = []
@@ -74,8 +71,6 @@ class Resampler:
         return sampled_val
 
 if __name__ == '__main__':
-    import logging
-    logging.root.setLevel(logging.INFO)
     import matplotlib.pyplot as plt
 
     fname = './Kaon_Stripping20_MagnetUp.root'
