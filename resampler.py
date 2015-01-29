@@ -42,8 +42,6 @@ class Resampler:
         # Choose histogram size according to binning
         self.histogram = np.zeros(map(lambda x: len(x) - 1, self.edges))
 
-        print(self.histogram.shape)
-
         for i, chunk in enumerate(read_root(fname, "default",
                                             chunksize=chunksize,
                                             variables=self.columns,
