@@ -2,6 +2,7 @@
 [
 	{
 	"particle" : "Kaon",
+    "branch_particle" : "K",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -82,6 +83,7 @@
 	},
 	{
 	"particle" : "Kaon",
+    "branch_particle" : "K",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -114,6 +116,7 @@
 	},
 	{
 	"particle" : "Pi",
+    "branch_particle" : "pi",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -194,6 +197,7 @@
 	},
 	{
 	"particle" : "Pi",
+    "branch_particle" : "pi",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -226,6 +230,7 @@
 	},
 	{
 	"particle" : "P_fromLc",
+    "branch_particle" : "P",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -236,6 +241,7 @@
 	},
 	{
 	"particle" : "P_fromLc",
+    "branch_particle" : "P",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -244,6 +250,7 @@
 	},
 	{
 	"particle" : "Mu",
+    "branch_particle" : "mu",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -333,6 +340,7 @@
 	},
 	{
 	"particle" : "Mu",
+    "branch_particle" : "mu",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -359,6 +367,7 @@
 	},
 	{
 	"particle" : "e",
+    "branch_particle" : "e",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -368,6 +377,7 @@
 	},
 	{
 	"particle" : "e",
+    "branch_particle" : "e",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -376,6 +386,7 @@
 	},
 	{
 	"particle" : "P_fromL0",
+    "branch_particle" : "e",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -502,6 +513,7 @@
 	},
 	{
 	"particle" : "P_fromL0",
+    "branch_particle" : "P",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -548,6 +560,7 @@
 	},
 	{
 	"particle" : "Kaon",
+    "branch_particle" : "K",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -627,6 +640,7 @@
 	},
 	{
 	"particle" : "Kaon",
+    "branch_particle" : "K",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -670,6 +684,7 @@
 	},
 	{
 	"particle" : "Pi",
+    "branch_particle" : "pi",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -749,6 +764,7 @@
 	},
 	{
 	"particle" : "Pi",
+    "branch_particle" : "pi",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -792,6 +808,7 @@
 	},
 	{
 	"particle" : "P_fromLc",
+    "branch_particle" : "P",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -802,6 +819,7 @@
 	},
 	{
 	"particle" : "P_fromLc",
+    "branch_particle" : "P",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -811,6 +829,7 @@
 	},
 	{
 	"particle" : "Mu",
+    "branch_particle" : "mu",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -898,6 +917,7 @@
 	},
 	{
 	"particle" : "Mu",
+    "branch_particle" : "mu",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -932,6 +952,7 @@
 	},
 	{
 	"particle" : "e",
+    "branch_particle" : "e",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -940,6 +961,7 @@
 	},
 	{
 	"particle" : "e",
+    "branch_particle" : "e",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
@@ -948,6 +970,7 @@
 	},
 	{
 	"particle" : "P_fromL0",
+    "branch_particle" : "P",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -1076,6 +1099,7 @@
 	},
 	{
 	"particle" : "P_fromL0",
+    "branch_particle" : "P",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
