@@ -28,7 +28,12 @@ class Resampler:
         idx = []
         # Choose bins of conditional features
         for edges, vals in zip(self.edges, args):
-            idx.append(np.searchsorted(edges, vals) - 1)
+            print(edges, vals)
+            ix = np.searchsorted(edges, vals) - 1
+            ix[ix == 19] = 18
+            print(ix)
+            idx.append(ix)
+
         # Take everything from target feature
         idx.append(Ellipsis)
     
@@ -74,7 +79,7 @@ def grab_data(option):
         locations = json.load(f)
 
     for sample in locations:
-        output = options.output +'{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
+        output = options.output +'/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         ff = TFile(output, 'recreate')
         ff.Close()
         for input in sample['paths']:
@@ -88,8 +93,12 @@ def grab_data(option):
             logging.info('Saving data to {}'.format(output))
             dset.tree().Write('tree')
             ff.Close()
-            dset.Delete()
-            ws.Delete()
+            try:
+                # Sometimes, RooFit will segfault when cleaning up :)
+                dset.Delete()
+                ws.Delete()
+            except:
+                pass
 
 def create_resamplers(options):
     import sys
@@ -109,7 +118,7 @@ def create_resamplers(options):
     binning = [binning_P, binning_ETA] #, binning_nSPDHits]
     binning_ProbNN = np.linspace(0, 1, 100)
 
-    with open('raw_file_locations.json') as f:
+    with open('config.json') as f:
         locations = json.load(f)
 
     for sample in locations:
@@ -118,6 +127,7 @@ def create_resamplers(options):
         resamplers = dict()
         deps = map(lambda x: x.format(sample['branch_particle']), kin_variables)
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
+        print(data)
         if os.path.isfile(data):
             for pid in pids:
                 resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
@@ -141,10 +151,10 @@ def resample_branch(options):
 
     chunksize=100000
 
-    for i, chunk in enumerate(read_root(options.location, chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.location, variables=['hadron_P', 'hadron_ETA', 'hadron_ProbNNK'], chunksize=chunksize)):
         deps = chunk[options.dependents]
-        chunk[target] = resamp.sample(*deps)
-        chunk.to_root(options.target)
+        chunk[options.target] = resamp.sample(*deps.as_matrix().T)
+        chunk.to_root(options.location)
 
         print('Processed {} entries'.format(i * chunksize))
 
