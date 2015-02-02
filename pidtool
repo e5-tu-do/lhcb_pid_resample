@@ -165,6 +165,9 @@ def resample_branch(options):
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers()
 
+grab = subparsers.add_parser('grab_data')
+grab.set_defaults(func=grab_data)
+
 create = subparsers.add_parser('create_resamplers')
 create.set_defaults(func=create_resamplers)
 create.add_argument("location")
