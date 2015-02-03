@@ -4,6 +4,8 @@ from __future__ import print_function
 import argparse
 import numpy as np
 from numpy.random import choice
+import logging
+logging.basicConfig(level=logging.INFO)
 
 class Resampler:
 
@@ -26,15 +28,15 @@ class Resampler:
         args = np.array(args)
 
         idx = []
+        mask = np.zeros(args.shape[1], dtype=bool)
         # Choose bins of conditional features
         for edges, vals in zip(self.edges, args):
-            print(edges, vals)
             ix = np.searchsorted(edges, vals) - 1
-            ix[ix == 19] = 18
-            print(ix)
+            # If the result is outside of our range, we can't sample
+            mask |= (ix == 0) | (ix == len(edges)-1)
+            ix[(ix==0) | ix==len(edges)-1] = 1
             idx.append(ix)
-
-        # Take everything from target feature
+# Take everything from target feature
         idx.append(Ellipsis)
     
         tmp = self.histogram[idx]
@@ -52,6 +54,7 @@ class Resampler:
 
         # If the histogram is empty, we can't sample
         sampled_val[norm == 0] = np.nan
+        sampled_val[mask] = np.nan
 
         return sampled_val
 
@@ -64,8 +67,6 @@ def grab_data(option):
     from ROOT import TFile
     import subprocess
     import re
-    import logging
-    logging.basicConfig(level=logging.INFO)
 
     def wrap_iter(it):
         elem = it.Next()
@@ -73,7 +74,7 @@ def grab_data(option):
             yield elem
             elem = it.Next()
 
-    print ("Saving nTuples to " + options.output)
+    logging.info("Saving nTuples to " + options.output)
 
     with open('config.json') as f:
         locations = json.load(f)
@@ -95,10 +96,10 @@ def grab_data(option):
             ff.Close()
             try:
                 # Sometimes, RooFit will segfault when cleaning up :)
-                dset.Delete()
                 ws.Delete()
             except:
-                pass
+                from IPython import embed;
+                embed()
 
 def create_resamplers(options):
     import sys
@@ -127,14 +128,13 @@ def create_resamplers(options):
         resamplers = dict()
         deps = map(lambda x: x.format(sample['branch_particle']), kin_variables)
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
-        print(data)
         if os.path.isfile(data):
             for pid in pids:
                 resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
             for i, chunk in enumerate(read_root(data, variables=deps + pids, chunksize=100000)):
                 for pid in pids:
                     resamplers[pid].learn(*chunk[deps + [pid]].as_matrix().T)
-                print('Finished chunk {}'.format(i))
+                logging.info('Finished chunk {}'.format(i))
 
             with open(resampler_location, 'wb') as f:
                 pickle.dump(resamplers, f)
@@ -154,9 +154,9 @@ def resample_branch(options):
     for i, chunk in enumerate(read_root(options.location, variables=['hadron_P', 'hadron_ETA', 'hadron_ProbNNK'], chunksize=chunksize)):
         deps = chunk[options.dependents]
         chunk[options.target] = resamp.sample(*deps.as_matrix().T)
-        chunk.to_root(options.location)
+        chunk.to_root('out.root')
 
-        print('Processed {} entries'.format(i * chunksize))
+        logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers()
