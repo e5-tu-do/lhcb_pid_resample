@@ -15,10 +15,10 @@ class Resampler:
         # Choose histogram size according to bin edges
         self.histogram = np.zeros(map(lambda x: len(x) - 1, self.edges))
 
-    def learn(self, *args):
-        assert(len(args) == len(self.edges))
+    def learn(self, features, weights=None):
+        assert(len(features) == len(self.edges))
 
-        h , _ = np.histogramdd(args, bins=self.edges)
+        h , _ = np.histogramdd(features.T, bins=self.edges, weights=weights)
         self.histogram += h
 
     def sample(self, *args):
@@ -36,12 +36,12 @@ class Resampler:
             mask |= (ix == 0) | (ix == len(edges)-1)
             ix[(ix==0) | ix==len(edges)-1] = 1
             idx.append(ix)
-# Take everything from target feature
+        # Take everything from target feature
         idx.append(Ellipsis)
     
         tmp = self.histogram[idx]
+        tmp[tmp < 0] = 0
         norm = np.sum(tmp, axis=1)
-
         probs = tmp / norm[:,np.newaxis]
 
         sampled_bin = []
@@ -87,6 +87,7 @@ def grab_data(option):
             logging.info('Opening file {}'.format(input))
             f = TFile.Open(input)
             ws = f.Get(f.GetListOfKeys().First().GetName())
+            ROOT.SetOwnership(ws, False)
             data = ws.allData().front()
             ROOT.RooAbsData.setDefaultStorageType(ROOT.RooAbsData.Tree)
             ff = TFile(output, 'update')
@@ -131,9 +132,9 @@ def create_resamplers(options):
         if os.path.isfile(data):
             for pid in pids:
                 resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
-            for i, chunk in enumerate(read_root(data, variables=deps + pids, chunksize=100000)):
+            for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
                 for pid in pids:
-                    resamplers[pid].learn(*chunk[deps + [pid]].as_matrix().T)
+                    resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
                 logging.info('Finished chunk {}'.format(i))
 
             with open(resampler_location, 'wb') as f:
