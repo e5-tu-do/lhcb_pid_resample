@@ -136,10 +136,10 @@ def create_resamplers(options):
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
         for pid in pids:
             resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
-            for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
-                for pid in pids:
-                    resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
-                logging.info('Finished chunk {}'.format(i))
+        for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
+            for pid in pids:
+                resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
+            logging.info('Finished chunk {}'.format(i))
         with open(resampler_location, 'wb') as f:
             pickle.dump(resamplers, f)
 
