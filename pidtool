@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 from numpy.random import choice
 import logging
+
+
 logging.basicConfig(level=logging.INFO)
 
 class Resampler:
@@ -108,37 +110,38 @@ def create_resamplers(options):
     import numpy as np
     import pickle
     import json
-
     from root_pandas import read_root
+    from PIDPerfScripts.Binning import GetBinScheme
 
     pid_variables = ['V3ProbNNK', 'V3ProbNNpi', 'V3ProbNNmu', 'V3ProbNNp']
     kin_variables = ['{}_P', '{}_Eta']
 
-    binning_P = np.linspace(0, 1e5, 20)
-    binning_ETA = np.linspace(0, 7, 20)
-    #binning_nSPDHits = np.linspace(0, 800, 20)
-    binning = [binning_P, binning_ETA] #, binning_nSPDHits]
     binning_ProbNN = np.linspace(0, 1, 100)
 
     with open('config.json') as f:
         locations = json.load(f)
 
     for sample in locations:
+
+        bin_temp = GetBinScheme(sample['branch_particle'],"P",None) #last argument takes name of user-defined binning
+        binning_P = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
+
+        bin_temp = GetBinScheme(sample['branch_particle'],"ETA",None) #last argument takes name of user-defined binning TODO: let user pass this argument 
+        binning_ETA = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
+        
         data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
         resamplers = dict()
         deps = map(lambda x: x.format(sample['branch_particle']), kin_variables)
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
-        if os.path.isfile(data):
-            for pid in pids:
-                resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
+        for pid in pids:
+            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
             for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
                 for pid in pids:
                     resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
                 logging.info('Finished chunk {}'.format(i))
-
-            with open(resampler_location, 'wb') as f:
-                pickle.dump(resamplers, f)
+        with open(resampler_location, 'wb') as f:
+            pickle.dump(resamplers, f)
 
 
 def resample_branch(options):
@@ -146,7 +149,7 @@ def resample_branch(options):
     import pickle
     from root_pandas import read_root
 
-    with open(options.resampler, 'rb') as f:
+    with open(options.resamplers, 'rb') as f:
         resamplers = pickle.load(f)
     resamp = resamplers[options.pid_to_sample]
 
@@ -173,7 +176,7 @@ create.add_argument("location")
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
 
-resample.add_argument("resampler")
+resample.add_argument("resamplers")
 resample.add_argument("pid_to_sample")
 resample.add_argument("location")
 resample.add_argument("dependents", nargs='+')
