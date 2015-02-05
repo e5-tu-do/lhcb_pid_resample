@@ -115,7 +115,7 @@ def create_resamplers(options):
 
     #pid_variables = ['V3ProbNNK', 'V3ProbNNpi', 'V3ProbNNmu', 'V3ProbNNp']
     pid_variables = ['CombDLLK','CombDLLmu','CombDLLp','CombDLLe']
-    kin_variables = ['{}_P', '{}_Eta']
+    kin_variables = ['{}_P', '{}_Eta','nTracks']
 
     binning_ProbNN = np.linspace(0, 1, 100)
     binning_DLL = np.append([-1001],np.linspace(-150,150,300))
@@ -129,6 +129,9 @@ def create_resamplers(options):
 
         bin_temp = GetBinScheme(sample['branch_particle'],"ETA",None) #last argument takes name of user-defined binning TODO: let user pass this argument 
         binning_ETA = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
+
+        bin_temp = GetBinScheme(sample['branch_particle'],"nTracks",None) #last argument takes name of user-defined binning TODO: let user pass this argume
+	binning_nTracks = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
         
         data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
@@ -137,7 +140,7 @@ def create_resamplers(options):
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
         for pid in pids:
             #resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
-            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_DLL)
+            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, binning_DLL)
         for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
             for pid in pids:
                 resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
