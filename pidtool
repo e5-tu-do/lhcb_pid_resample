@@ -55,8 +55,8 @@ class Resampler:
                                         size=len(sampled_bin))
 
         # If the histogram is empty, we can't sample
-        sampled_val[norm == 0] = np.nan
-        sampled_val[mask] = np.nan
+        sampled_val[norm == 0] = -1000
+        sampled_val[mask] = -1000
 
         return sampled_val
 
@@ -113,16 +113,17 @@ def create_resamplers(options):
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
 
-    pid_variables = ['V3ProbNNK', 'V3ProbNNpi', 'V3ProbNNmu', 'V3ProbNNp']
+    #pid_variables = ['V3ProbNNK', 'V3ProbNNpi', 'V3ProbNNmu', 'V3ProbNNp']
+    pid_variables = ['CombDLLK','CombDLLmu','CombDLLp','CombDLLe']
     kin_variables = ['{}_P', '{}_Eta']
 
     binning_ProbNN = np.linspace(0, 1, 100)
+    binning_DLL = np.append([-1001],np.linspace(-150,150,300))
 
     with open('config.json') as f:
         locations = json.load(f)
 
     for sample in locations:
-
         bin_temp = GetBinScheme(sample['branch_particle'],"P",None) #last argument takes name of user-defined binning
         binning_P = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
 
@@ -135,7 +136,8 @@ def create_resamplers(options):
         deps = map(lambda x: x.format(sample['branch_particle']), kin_variables)
         pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
         for pid in pids:
-            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
+            #resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
+            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_DLL)
         for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
             for pid in pids:
                 resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
@@ -151,11 +153,14 @@ def resample_branch(options):
 
     with open(options.resamplers, 'rb') as f:
         resamplers = pickle.load(f)
-    resamp = resamplers[options.pid_to_sample]
+    try:
+        resamp = resamplers[options.pid_to_sample]
+    except KeyError as e:
+        raise KeyError("There is no resampler for"+options.pid_to_sample+". The available resamplers are: "+str(resamplers.keys()))
 
     chunksize=100000
 
-    for i, chunk in enumerate(read_root(options.location, variables=['hadron_P', 'hadron_ETA', 'hadron_ProbNNK'], chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.location, ignore=["*_COV_"], chunksize=chunksize)):
         deps = chunk[options.dependents]
         chunk[options.target] = resamp.sample(*deps.as_matrix().T)
         chunk.to_root('out.root')
