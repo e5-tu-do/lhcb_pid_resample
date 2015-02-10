@@ -386,7 +386,7 @@
 	},
 	{
 	"particle" : "P_fromL0",
-    "branch_particle" : "e",
+    "branch_particle" : "P",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [

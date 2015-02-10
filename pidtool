@@ -33,11 +33,11 @@ class Resampler:
         mask = np.zeros(args.shape[1], dtype=bool)
         # Choose bins of conditional features
         for edges, vals in zip(self.edges, args):
-            ix = np.searchsorted(edges, vals) - 1
+            ix = np.searchsorted(edges, vals)
             # If the result is outside of our range, we can't sample
-            mask |= (ix == 0) | (ix == len(edges)-1)
-            ix[(ix==0) | ix==len(edges)-1] = 1
-            idx.append(ix)
+            mask |= (ix == 0) | (ix == len(edges))
+            ix[(ix==0) | ix==len(edges)] = 1
+            idx.append(ix - 1)
         # Take everything from target feature
         idx.append(Ellipsis)
     
@@ -55,10 +55,17 @@ class Resampler:
                                         size=len(sampled_bin))
 
         # If the histogram is empty, we can't sample
-        sampled_val[norm == 0] = -1000
-        sampled_val[mask] = -1000
+        # print( args[:,norm==0])
+        # print (self.edges)
+        # print (args[:,mask])
+        sampled_val[norm == 0] = np.nan
+        sampled_val[mask] = np.nan
+
 
         return sampled_val
+
+def rooBinning_to_list(rooBinning):
+    return [rooBinning.binLow(i) for i in range(rooBinning.numBins())]+[rooBinning.binHigh(rooBinning.numBins()-1)]
 
 def grab_data(option):
     from root_pandas import read_root
@@ -124,15 +131,10 @@ def create_resamplers(options):
         locations = json.load(f)
 
     for sample in locations:
-        bin_temp = GetBinScheme(sample['branch_particle'],"P",None) #last argument takes name of user-defined binning
-        binning_P = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
-
-        bin_temp = GetBinScheme(sample['branch_particle'],"ETA",None) #last argument takes name of user-defined binning TODO: let user pass this argument 
-        binning_ETA = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
-
-        bin_temp = GetBinScheme(sample['branch_particle'],"nTracks",None) #last argument takes name of user-defined binning TODO: let user pass this argume
-	binning_nTracks = [bin_temp.binLow(i) for i in range(bin_temp.numBins())]
-        
+        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"P",None)) #last argument takes name of user-defined binning
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"ETA",None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
+        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"nTracks",None)) #last argument takes name of user-defined binning TODO: let user pass this argument
+    	
         data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
         resamplers = dict()
@@ -166,7 +168,7 @@ def resample_branch(options):
     for i, chunk in enumerate(read_root(options.location, ignore=["*_COV_"], chunksize=chunksize)):
         deps = chunk[options.dependents]
         chunk[options.target] = resamp.sample(*deps.as_matrix().T)
-        chunk.to_root('out.root')
+        chunk.to_root('out.root',mode="a")
 
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
