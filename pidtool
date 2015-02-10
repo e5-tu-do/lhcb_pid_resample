@@ -12,37 +12,36 @@ logging.basicConfig(level=logging.INFO)
 class Resampler:
 
     def __init__(self, *args):
-        self.edges = args
-
         # Choose histogram size according to bin edges
+        # Take under/overflow into account for dependent variables only
+        edges = []
+        for arg in args[:-1]:
+            edges.append(np.append(np.append([-np.inf], arg), [np.inf]))
+        edges.append(args[-1])
+        self.edges = edges
+
         self.histogram = np.zeros(map(lambda x: len(x) - 1, self.edges))
 
     def learn(self, features, weights=None):
         assert(len(features) == len(self.edges))
 
+        features = np.array(features)
+
         h , _ = np.histogramdd(features.T, bins=self.edges, weights=weights)
         self.histogram += h
 
-    def sample(self, *args):
+    def sample(self, features):
 
-        assert(len(args) == len(self.edges) - 1)
+        assert(len(features) == len(self.edges) - 1)
 
-        args = np.array(args)
+        args = np.array(features)
 
-        idx = []
-        mask = np.zeros(args.shape[1], dtype=bool)
-        # Choose bins of conditional features
-        for edges, vals in zip(self.edges, args):
-            ix = np.searchsorted(edges, vals)
-            # If the result is outside of our range, we can't sample
-            mask |= (ix == 0) | (ix == len(edges))
-            ix[(ix==0) | ix==len(edges)] = 1
-            idx.append(ix - 1)
-        # Take everything from target feature
-        idx.append(Ellipsis)
-    
+        idx = [np.searchsorted(edges, vals) - 1 for edges, vals in zip(self.edges, args)]
+
         tmp = self.histogram[idx]
+        # Fix negative bins (resulting from possible negative weights) to zero
         tmp[tmp < 0] = 0
+
         norm = np.sum(tmp, axis=1)
         probs = tmp / norm[:,np.newaxis]
 
@@ -55,12 +54,7 @@ class Resampler:
                                         size=len(sampled_bin))
 
         # If the histogram is empty, we can't sample
-        # print( args[:,norm==0])
-        # print (self.edges)
-        # print (args[:,mask])
         sampled_val[norm == 0] = np.nan
-        sampled_val[mask] = np.nan
-
 
         return sampled_val
 
@@ -167,7 +161,7 @@ def resample_branch(options):
 
     for i, chunk in enumerate(read_root(options.location, ignore=["*_COV_"], chunksize=chunksize)):
         deps = chunk[options.dependents]
-        chunk[options.target] = resamp.sample(*deps.as_matrix().T)
+        chunk[options.target] = resamp.sample(deps.values.T)
         chunk.to_root('out.root',mode="a")
 
         logging.info('Processed {} entries'.format((i+1) * chunksize))
