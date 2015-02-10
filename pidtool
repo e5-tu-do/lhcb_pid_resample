@@ -137,7 +137,7 @@ def create_resamplers(options):
         for pid in pids:
             #resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
             resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, binning_DLL)
-        for i, chunk in enumerate(read_root(data, variables=deps + pids + ['nsig_sw'], chunksize=100000)):
+        for i, chunk in enumerate(read_root(data, columns=deps + pids + ['nsig_sw'], chunksize=100000)):
             for pid in pids:
                 resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
             logging.info('Finished chunk {}'.format(i))
