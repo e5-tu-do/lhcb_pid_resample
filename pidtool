@@ -6,6 +6,7 @@ import numpy as np
 from numpy.random import choice
 import logging
 import json
+import os
 
 
 logging.basicConfig(level=logging.INFO)
@@ -34,18 +35,13 @@ class Resampler:
     def sample(self, features):
 
         assert(len(features) == len(self.edges) - 1)
-
         args = np.array(features)
-
         idx = [np.searchsorted(edges, vals) - 1 for edges, vals in zip(self.edges, args)]
-
         tmp = self.histogram[idx]
         # Fix negative bins (resulting from possible negative weights) to zero
         tmp[tmp < 0] = 0
-
         norm = np.sum(tmp, axis=1)
         probs = tmp / norm[:,np.newaxis]
-
         sampled_bin = []
         for i in range(tmp.shape[0]):
             sampled_bin.append(choice(tmp.shape[1], p=probs[i,:]))
@@ -53,7 +49,6 @@ class Resampler:
         sampled_val = np.random.uniform(self.edges[-1][sampled_bin],
                                         self.edges[-1][sampled_bin + 1],
                                         size=len(sampled_bin))
-
         # If the histogram is empty, we can't sample
         sampled_val[norm == 0] = np.nan
 
@@ -115,16 +110,14 @@ def create_resamplers(options):
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
 
-    #pid_variables = ['V3ProbNNK', 'V3ProbNNpi', 'V3ProbNNmu', 'V3ProbNNp']
-    pid_variables = ['CombDLLK','CombDLLmu','CombDLLp','CombDLLe']
+    pid_variables = ['{}_CombDLLK','{}_CombDLLmu','{}_CombDLLp','{}_CombDLLe','{}_V3ProbNNK', '{}_V3ProbNNpi', '{}_V3ProbNNmu', '{}_V3ProbNNp']
     kin_variables = ['{}_P', '{}_Eta','nTracks']
 
-    binning_ProbNN = np.linspace(0, 1, 100)
-    binning_DLL = np.append([-1001],np.linspace(-150,150,300))
 
     with open('config.json') as f:
         locations = json.load(f)
-
+    if options.particles:
+        locations =  [sample for sample in locations if sample["particle"] in options.particles]
     for sample in locations:
         binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"P",None)) #last argument takes name of user-defined binning
         binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"ETA",None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
@@ -132,12 +125,19 @@ def create_resamplers(options):
     	
         data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
+        if os.path.exists(resampler_location):
+            os.remove(resampler_location)
         resamplers = dict()
         deps = map(lambda x: x.format(sample['branch_particle']), kin_variables)
-        pids = map(lambda x: sample['branch_particle'] + '_' + x, pid_variables)
+        pids = map(lambda x: x.format(sample['branch_particle']), pid_variables)
         for pid in pids:
-            #resamplers[pid] = Resampler(binning_P, binning_ETA, binning_ProbNN)
-            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, binning_DLL)
+            if "DLL" in pid:
+                target_binning = np.append([-1001],np.linspace(-150,150,300)) # binning for DLL
+            elif "ProbNN" in pid:
+                target_binning = np.linspace(0, 1, 100) # binning for ProbNN
+            else:
+                raise Exception
+            resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, target_binning)
         for i, chunk in enumerate(read_root(data, columns=deps + pids + ['nsig_sw'], chunksize=100000)):
             for pid in pids:
                 resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
@@ -147,7 +147,7 @@ def create_resamplers(options):
 
 
 def resample_branch(options):
-
+    # maybe use pyroot here instead of root_pandas
     import pickle
     from root_pandas import read_root
 
@@ -178,17 +178,16 @@ subparsers = parser.add_subparsers()
 
 grab = subparsers.add_parser('grab_data', help='Downloads PID calib data from EOS and saves it as NTuples')
 grab.set_defaults(func=grab_data)
+grab.add_argument('output', help="Directory where grabbed data is being stored.")
 grab.add_argument('--particles', nargs='*', help="Optional subset of particles for which calibration data will be downloaded. Choose from "+", ".join(particle_set))
-grab.add_argument('output')
-
 
 create = subparsers.add_parser('create_resamplers', help='Generates resampling histograms from NTuples')
 create.set_defaults(func=create_resamplers)
-create.add_argument("location")
+create.add_argument("location", help="Directory where grab_data downloaded the .root - files.")
+create.add_argument('--particles', nargs='*', help="Optional subset of particles for which calibration data will be downloaded. Choose from "+", ".join(particle_set))
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
-
 resample.add_argument("resamplers")
 resample.add_argument("pid_to_sample")
 resample.add_argument("location")
