@@ -6,7 +6,6 @@ import numpy as np
 from numpy.random import choice
 import logging
 import json
-import os
 
 
 logging.basicConfig(level=logging.INFO)
@@ -60,7 +59,6 @@ def rooBinning_to_list(rooBinning):
 def grab_data(options):
     from root_pandas import read_root
     from pandas import DataFrame
-    import sys
     import ROOT
     from ROOT import TFile
     import subprocess
@@ -99,18 +97,17 @@ def grab_data(options):
                 # Sometimes, RooFit will segfault when cleaning up :)
                 ws.Delete()
             except:
-                from IPython import embed;
+                from IPython import embed
                 embed()
 
 def create_resamplers(options):
-    import sys
     import os.path
     import numpy as np
     import pickle
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
 
-    pid_variables = ['{}_CombDLLK','{}_CombDLLmu','{}_CombDLLp','{}_CombDLLe','{}_V3ProbNNK', '{}_V3ProbNNpi', '{}_V3ProbNNmu', '{}_V3ProbNNp']
+    pid_variables = ['{}_CombDLLK', '{}_CombDLLmu', '{}_CombDLLp', '{}_CombDLLe', '{}_V3ProbNNK', '{}_V3ProbNNpi', '{}_V3ProbNNmu', '{}_V3ProbNNp']
     kin_variables = ['{}_P', '{}_Eta','nTracks']
 
 
@@ -119,9 +116,9 @@ def create_resamplers(options):
     if options.particles:
         locations =  [sample for sample in locations if sample["particle"] in options.particles]
     for sample in locations:
-        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"P",None)) #last argument takes name of user-defined binning
-        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"ETA",None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
-        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'],"nTracks",None)) #last argument takes name of user-defined binning TODO: let user pass this argument
+        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", None)) #last argument takes name of user-defined binning
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
+        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", None)) #last argument takes name of user-defined binning TODO: let user pass this argument
     	
         data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
         resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
@@ -132,7 +129,7 @@ def create_resamplers(options):
         pids = map(lambda x: x.format(sample['branch_particle']), pid_variables)
         for pid in pids:
             if "DLL" in pid:
-                target_binning = np.append([-1001],np.linspace(-150,150,300)) # binning for DLL
+                target_binning = np.append([-1001], np.linspace(-150, 150, 300)) # binning for DLL
             elif "ProbNN" in pid:
                 target_binning = np.linspace(0, 1, 100) # binning for ProbNN
             else:
@@ -151,26 +148,33 @@ def resample_branch(options):
     import pickle
     from root_pandas import read_root
 
-    with open(options.resamplers, 'rb') as f:
-        resamplers = pickle.load(f)
-    try:
-        resamp = resamplers[options.pid_to_sample]
-    except KeyError as e:
-        raise KeyError("There is no resampler for"+options.pid_to_sample+". The available resamplers are: "+str(resamplers.keys()))
+    with open(options.configfile) as f:
+        config = json.load(f)
 
-    chunksize=100000
+    #load resamplers into config dictionary
+    for task in config["tasks"]:
+        with open(task["resampler_path"], 'rb') as f:
+            resamplers = pickle.load(f)
+            for pid in task["pids"]:
+                try:
+                    pid["resampler"] = resamplers[pid["kind"]]
+                except KeyError:
+                    logging.error("No resampler found for "+task["particle"]+" and "+pid["kind"]+".")
+                    raise
 
-    for i, chunk in enumerate(read_root(options.location, ignore=["*_COV_"], chunksize=chunksize)):
-        deps = chunk[options.dependents]
-        chunk[options.target] = resamp.sample(deps.values.T)
-        chunk.to_root('out.root',mode="a")
+    chunksize = 100000
 
+    for i, chunk in enumerate(read_root(options.source_file, ignore=["*_COV_"], chunksize=chunksize)):
+        for task in config["tasks"]:
+            deps = chunk[task["features"]]
+            for pid in task["pids"]:
+                chunk[pid["name"]] = pid["resampler"].sample(deps.values.T)
+        chunk.to_root(options.output_file, mode="a")
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
-import json
-with open('config.json') as f:
-        locations = json.load(f)
+with open('config.json') as configfile:
+    locations = json.load(configfile)
 particle_set = set([sample["particle"] for sample in locations])
 
 parser = argparse.ArgumentParser()
@@ -189,11 +193,10 @@ create.add_argument('--cutstring', help="Optional cutstring. For example you can
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
-resample.add_argument("resamplers")
-resample.add_argument("pid_to_sample")
-resample.add_argument("location")
-resample.add_argument("dependents", nargs='+')
-resample.add_argument("target")
+resample.add_argument("configfile")
+resample.add_argument("source_file")
+resample.add_argument("output_file")
+resample.add_argument("--use-clonetree", dest='use_clonetree', action='store_true', default=False)
 
 if __name__ == '__main__':
     options = parser.parse_args()

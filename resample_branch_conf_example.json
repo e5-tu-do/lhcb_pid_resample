@@ -1,0 +1,18 @@
+{
+    "tasks": [
+        {
+            "particle" : "P_fromLc",
+            "resampler_path" : "./P_fromLc_Stripping20r1_MagnetDown.pkl",
+            "features" : ["hadron_P", "hadron_ETA", "nTracks"],
+            "pids" : [{"kind" : "P_CombDLLK", "name" : "hadron_DLLK_corrected"},{"kind" : "P_CombDLLp", "name" : "hadron_DLLp_corrected"}]
+
+        },
+        {
+            "particle" : "P_fromLc",
+            "resampler_path" : "./P_fromLc_Stripping20r1_MagnetUp.pkl",
+            "features" : ["hadron_P", "hadron_ETA", "nTracks"],
+            "pids" : [{"kind" : "P_CombDLLK", "name" : "hadron_DLLK_corrected_maguptest"},{"kind" : "P_CombDLLp", "name" : "hadron_DLLp_corrected_maguptest"}]
+
+        }
+        ]
+}
