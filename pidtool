@@ -163,7 +163,6 @@ def resample_branch(options):
                     raise
 
     chunksize = 100000
-
     for i, chunk in enumerate(read_root(options.source_file, ignore=["*_COV_"], chunksize=chunksize)):
         for task in config["tasks"]:
             deps = chunk[task["features"]]
