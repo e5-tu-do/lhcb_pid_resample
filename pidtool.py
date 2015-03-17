@@ -72,7 +72,7 @@ def grab_data(options):
 
     logging.info("Saving nTuples to " + options.output)
 
-    with open('config.json') as f:
+    with open('raw_data.json') as f:
         locations = json.load(f)
     if options.particles is not None:
         locations =  [sample for sample in locations if sample["particle"] in options.particles]
@@ -111,7 +111,7 @@ def create_resamplers(options):
     kin_variables = ['{}_P', '{}_Eta','nTracks']
 
 
-    with open('config.json') as f:
+    with open('raw_data.json') as f:
         locations = json.load(f)
     if options.particles:
         locations =  [sample for sample in locations if sample["particle"] in options.particles]
@@ -172,7 +172,7 @@ def resample_branch(options):
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
-with open('config.json') as configfile:
+with open('raw_data.json') as configfile:
     locations = json.load(configfile)
 particle_set = set([sample["particle"] for sample in locations])
 
