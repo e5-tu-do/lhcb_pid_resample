@@ -5,7 +5,16 @@ The aim of this project is to allow simplify and accelerate the tedious task of 
 
 ## Installation:
 
-TODO
+Clone from git:
+
+    git clone git@github.com:e5-tu-do/lhcb_pid_resample.git
+    
+At the moment the software also requires the following folder from the LHCb PIDCalib package:
+
+    http://svn.cern.ch/guest/lhcb/Urania/trunk/PIDCalib/PIDPerfScripts/python/
+    
+You can either check it out directly or get it via getpack, for example when setting up PIDCalib as described here: https://twiki.cern.ch/twiki/bin/view/LHCb/PIDCalibPackage
+In both cases you need to add the folder to your PYTHONPATH.
 
 ## Usage:
 
