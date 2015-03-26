@@ -3,6 +3,10 @@
 Resample ("reweight") simulated values using clean data samples.
 The aim of this project is to allow simplify and accelerate the tedious task of resampling PIDs and other variables.
 
+## Requirements:
+
+* [`root_pandas`](https://github.com/ibab/root_pandas)
+
 ## Installation:
 
 Clone from git:
@@ -32,6 +36,8 @@ It is not yet supported to define a custom set of dependet variables in the opti
 However, in some cases it is better to avoid the track multiplicity as an input variable, which at the moment still requires some small modifications in the code.
 
 ### 2. Download raw data from EOS.
+
+This needs to be run from a location where EOS access is supported.
 
 Data must be downloaded for any particle type who's PID should be resampled. Since this is a tedious process, 
 we recommend you store the downloaded files locally and keep them for around for future analyses. You only need to 
