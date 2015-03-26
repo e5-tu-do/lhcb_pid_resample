@@ -39,3 +39,26 @@ If you want to limit your download to certain particle types, you can specify th
 `--particles`.
 For example `python pidtool.py grab_data ./ --particles Mu` will download muon- data to the current directory. 
 For more information and a list of possible particles type `python pidtool.py grab_data --help`
+
+*There is a known issue where the download causes a segfault after completing. If this happens to you, please make sure you have downloaded all the data by checking the `raw_data.json` file.*
+
+### 3. Create resamplers
+
+A resampler is a worker object that performs the resampling for a sepecific particle and PID type. Resamplers can be created only for particles types whose data has been downloaded.
+
+To create resamplers for all particle types and PID types, do
+
+    python pidtool.py create_resamplers <output>
+    
+Where  `<output>` is again the output directory. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs.
+
+### 4. Run the resampling
+The comamnd
+    python pidtool.py <configfile> <source_file> <output_file>
+will run the resampling. `<source_file`> is the root file containting the simulated data and `<output_file>` can be chosen freely. An example config-file called `config.json` is part of the repository. In the configurations file, the options are:
+* `tasks` : A list of resampling-tasks. Create a task for every particle for which you want to resample PIDs.
+  * `particle` : The particle type. Possible values are the same as for the `--particles` option mentioned above. 
+  * `resampler_path` : Path to resampler pickle-file to be used for resampling. The resampler name will contain the `particle` - name, the stripping version and the magnet orientation. 
+  * `pids` : List of all pid branches to be created for this particle.
+    * `kind` : Type of PID. Possible values are `X_CombDLLK`, `X_CombDLLmu`, `X_CombDLLp`, `X_CombDLLe`, `X_V3ProbNNK`, `X_V3ProbNNpi`, `X_V3ProbNNmu`, `X_V3ProbNNp`, where X can be `P`,`K`,`pi`,`mu` or `e`.
+    * `name` : Name of the resulting branch, to be chosen freely.
