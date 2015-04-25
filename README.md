@@ -1,7 +1,7 @@
 # lhcb_pid_resample
 
 Resample ("reweight") simulated values using clean data samples.
-The aim of this project is to allow simplify and accelerate the tedious task of resampling PIDs and other variables.
+The aim of this project is to simplify and accelerate the tedious task of resampling PIDs and other variables.
 
 ## Requirements:
 
