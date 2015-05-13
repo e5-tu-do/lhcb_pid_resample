@@ -63,9 +63,9 @@ A resampler is a worker object that performs the resampling for a sepecific part
 
 To create resamplers for all particle types and PID types, do
 
-    python pidtool.py create_resamplers <output>
+    python pidtool.py create_resamplers <tuples-location>
     
-Where  `<output>` is again the output directory. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs.
+Where  `<tuples-location>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs.
 
 ### 4. Run the resampling
 The comamnd
