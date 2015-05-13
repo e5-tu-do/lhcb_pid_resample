@@ -378,7 +378,7 @@
 	{
 	"particle" : "e",
     "branch_particle" : "e",
-	"magnet" : "Down",
+	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
 		"root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/calib/lhcb/calib/pid/CalibData/Reco14_DATA/MagUp/Jpsi_e_MagUp_Strip20r1_0.root"
