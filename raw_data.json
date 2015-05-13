@@ -250,7 +250,7 @@
 	},
 	{
 	"particle" : "Mu",
-    "branch_particle" : "mu",
+    "branch_particle" : "Mu",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -340,7 +340,7 @@
 	},
 	{
 	"particle" : "Mu",
-    "branch_particle" : "mu",
+    "branch_particle" : "Mu",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -829,7 +829,7 @@
 	},
 	{
 	"particle" : "Mu",
-    "branch_particle" : "mu",
+    "branch_particle" : "Mu",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -917,7 +917,7 @@
 	},
 	{
 	"particle" : "Mu",
-    "branch_particle" : "mu",
+    "branch_particle" : "Mu",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
