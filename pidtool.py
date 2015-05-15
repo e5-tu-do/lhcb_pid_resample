@@ -129,7 +129,7 @@ def create_resamplers(options):
         pids = map(lambda x: x.format(sample['branch_particle']), pid_variables)
         for pid in pids:
             if "DLL" in pid:
-                target_binning = np.append([-1001], np.linspace(-150, 150, 300)) # binning for DLL
+                target_binning = np.linspace(-150, 150, 300) # binning for DLL
             elif "ProbNN" in pid:
                 target_binning = np.linspace(0, 1, 100) # binning for ProbNN
             else:
