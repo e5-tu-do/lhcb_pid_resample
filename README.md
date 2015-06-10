@@ -70,7 +70,7 @@ Where  `<output>` is the directory where `grab_data` downloaded the `.root` - fi
 ### 4. Run the resampling
 The comamnd
 
-    python pidtool.py <configfile> <source_file> <output_file>
+    python pidtool.py resample_branch <configfile> <source_file> <output_file>
     
 will run the resampling. `<source_file`> is the root file containting the simulated data and `<output_file>` can be chosen freely. An example config-file called `config.json` is part of the repository. In the configurations file, the options are:
 * `tasks` : A list of resampling-tasks. Create a task for every particle for which you want to resample PIDs.
