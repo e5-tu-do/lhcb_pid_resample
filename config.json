@@ -1,10 +1,16 @@
 {
     "tasks": [
         {
-            "particle" : "P_fromLc",
-            "resampler_path" : "./P_fromLc_Stripping20r1_MagnetDown.pkl",
-            "features" : ["proton_P", "proton_ETA", "nTracks"],
-            "pids" : [{"kind" : "P_CombDLLK", "name" : "proton_DLLK_corrected"}]
+            "particle" : "Kaon",
+            "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
+            "features" : ["Kplus_P", "Kplus_LOKI_ETA", "nTracks"],
+            "pids" : [{"kind" : "K_V3ProbNNK", "name" : "Kplus_ProbNNk_corrected"}]
+        },
+        {
+            "particle" : "Kaon",
+            "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
+            "features" : ["Kminus_P", "Kminus_LOKI_ETA", "nTracks"],
+            "pids" : [{"kind" : "K_V3ProbNNK", "name" : "Kminus_ProbNNk_corrected"}]
         }
         ]
 }
