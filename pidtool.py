@@ -169,7 +169,7 @@ def resample_branch(options):
                     pid["resampler"] = resamplers[pid["kind"]]
                 except KeyError:
                     print (resamplers)
-                    logging.error("No resampler found for "+task["particle"]+" and "+pid["kind"]+".")
+                    logging.error("No resampler found for {kind} in {picklefile}.".format(kind=pid["kind"], picklefile=task["resampler_path"]))
                     raise
 
     chunksize = 100000

@@ -74,7 +74,6 @@ The command
 
 will run the resampling. `<source_file`> is the root file containing the simulated data and `<output_file>` can be chosen freely. An example config-file called `config.json` is part of the repository. In the configurations file, the options are:
 * `tasks` : A list of resampling-tasks. Create a task for every particle for which you want to resample PIDs.
-  * `particle` : The particle type. Possible values are the same as for the `--particles` option mentioned above.
   * `resampler_path` : Path to resampler pickle-file to be used for resampling. The resampler name will contain the `particle` - name, the stripping version and the magnet orientation.
   * `pids` : List of all pid branches to be created for this particle.
     * `kind` : Type of PID. Possible values are `X_CombDLLK`, `X_CombDLLmu`, `X_CombDLLp`, `X_CombDLLe`, `X_V3ProbNNK`, `X_V3ProbNNpi`, `X_V3ProbNNmu`, `X_V3ProbNNp`, where X can be `P`,`K`,`pi`,`mu` or `e`.
