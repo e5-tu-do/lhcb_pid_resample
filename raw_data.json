@@ -116,7 +116,7 @@
 	},
 	{
 	"particle" : "Pi",
-    "branch_particle" : "pi",
+    "branch_particle" : "Pi",
 	"magnet" : "Up",
 	"stripping" : "20",
 	"paths" : [
@@ -197,7 +197,7 @@
 	},
 	{
 	"particle" : "Pi",
-    "branch_particle" : "pi",
+    "branch_particle" : "Pi",
 	"magnet" : "Up",
 	"stripping" : "20r1",
 	"paths" : [
@@ -684,7 +684,7 @@
 	},
 	{
 	"particle" : "Pi",
-    "branch_particle" : "pi",
+    "branch_particle" : "Pi",
 	"magnet" : "Down",
 	"stripping" : "20",
 	"paths" : [
@@ -764,7 +764,7 @@
 	},
 	{
 	"particle" : "Pi",
-    "branch_particle" : "pi",
+    "branch_particle" : "Pi",
 	"magnet" : "Down",
 	"stripping" : "20r1",
 	"paths" : [
