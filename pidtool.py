@@ -199,7 +199,7 @@ create.set_defaults(func=create_resamplers)
 create.add_argument("location", help="Directory where grab_data downloaded the .root - files.")
 create.add_argument('--particles', nargs='*', help="Optional subset of particles for which resamplers will be created. Choose from "+", ".join(particle_set))
 create.add_argument('--cutstring', help="Optional cutstring. For example you can cut on the runNumber.")
-create.add_argument("--merge-magnet-orientations", dest='both_magnet_orientations', action='store_true', default=False, help='Create a resampler that combines the raw data for magup and mag down. A resampler object will be created for each magnet orientations.')
+create.add_argument("--merge-magnet-orientations", dest='both_magnet_orientations', action='store_true', default=False, help='Create a resampler that combines the raw data for magup and mag down.')
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
