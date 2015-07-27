@@ -65,7 +65,7 @@ To create resamplers for all particle types and PID types, do
 
     python pidtool.py create_resamplers <output>
 
-Where  `<output>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs.
+Where  `<output>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs. Lastly, there is `--merge-magnet-orientations`, which let's you create a resamplers that combine the raw data for magUp and magDown. 
 
 ### 4. Run the resampling
 The command
@@ -76,5 +76,5 @@ will run the resampling. `<source_file`> is the root file containing the simulat
 * `tasks` : A list of resampling-tasks. Create a task for every particle for which you want to resample PIDs.
   * `resampler_path` : Path to resampler pickle-file to be used for resampling. The resampler name will contain the `particle` - name, the stripping version and the magnet orientation.
   * `pids` : List of all pid branches to be created for this particle.
-    * `kind` : Type of PID. Possible values are `X_CombDLLK`, `X_CombDLLmu`, `X_CombDLLp`, `X_CombDLLe`, `X_V3ProbNNK`, `X_V3ProbNNpi`, `X_V3ProbNNmu`, `X_V3ProbNNp`, where X can be `P`,`K`,`pi`,`mu` or `e`.
+    * `kind` : Type of PID. Possible values are `X_CombDLLK`, `X_CombDLLmu`, `X_CombDLLp`, `X_CombDLLe`, `X_V3ProbNNK`, `X_V3ProbNNpi`, `X_V3ProbNNmu`, `X_V3ProbNNp`, where X can be `P`,`K`,`pi`,`Mu` or `e`.
     * `name` : Name of the resulting branch, to be chosen freely.
