@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-
 from __future__ import print_function
 import argparse
 import numpy as np
 from numpy.random import choice
 import logging
 import json
-
+import os
 
 logging.basicConfig(level=logging.INFO)
 
@@ -102,7 +101,6 @@ def grab_data(options):
 
 def create_resamplers(options):
     import os.path
-    import numpy as np
     import pickle
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
@@ -114,14 +112,21 @@ def create_resamplers(options):
     with open('raw_data.json') as f:
         locations = json.load(f)
     if options.particles:
-        locations =  [sample for sample in locations if sample["particle"] in options.particles]
+        locations = [sample for sample in locations if sample["particle"] in options.particles]
+    if options.both_magnet_orientations:
+        locations = [sample for sample in locations if sample["magnet"]=="Up"] # we use both maagnet orientations on the first run
     for sample in locations:
         binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", None)) #last argument takes name of user-defined binning
         binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
         binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", None)) #last argument takes name of user-defined binning TODO: let user pass this argument
-    	
-        data = options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)
-        resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
+    	if options.both_magnet_orientations:
+            if sample["magnet"]=="Up":  
+                data =  [options.location + '/{particle}_Stripping{stripping}_MagnetUp.root'  .format(**sample)]
+                data += [options.location + '/{particle}_Stripping{stripping}_MagnetDown.root'.format(**sample)]
+                resampler_location = '{particle}_Stripping{stripping}_MagnetAny.pkl'.format(**sample)
+        else:
+            data = [options.location + '/{particle}_Stripping{stripping}_Magnet{magnet}.root'.format(**sample)]
+            resampler_location = '{particle}_Stripping{stripping}_Magnet{magnet}.pkl'.format(**sample)
         if os.path.exists(resampler_location):
             os.remove(resampler_location)
         resamplers = dict()
@@ -135,21 +140,25 @@ def create_resamplers(options):
             else:
                 raise Exception
             resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, target_binning)
-        for i, chunk in enumerate(read_root(data, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set 
-            for pid in pids:
-                resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
-            logging.info('Finished chunk {}'.format(i))
+        for dataSet in data:
+            for i, chunk in enumerate(read_root(dataSet, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set 
+                for pid in pids:
+                    resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
+                logging.info('Finished chunk {}'.format(i))
         with open(resampler_location, 'wb') as f:
             pickle.dump(resamplers, f)
 
 
 def resample_branch(options):
-    # maybe use pyroot here instead of root_pandas
     import pickle
     from root_pandas import read_root
+    try:
+        os.remove(options.output_file)
+    except OSError:
+        pass
 
     with open(options.configfile) as f:
-        config = json.load(f)
+        config = json.load(f)   
 
     #load resamplers into config dictionary
     for task in config["tasks"]:
@@ -159,7 +168,8 @@ def resample_branch(options):
                 try:
                     pid["resampler"] = resamplers[pid["kind"]]
                 except KeyError:
-                    logging.error("No resampler found for "+task["particle"]+" and "+pid["kind"]+".")
+                    print (resamplers)
+                    logging.error("No resampler found for {kind} in {picklefile}.".format(kind=pid["kind"], picklefile=task["resampler_path"]))
                     raise
 
     chunksize = 100000
@@ -187,15 +197,15 @@ grab.add_argument('--particles', nargs='*', help="Optional subset of particles f
 create = subparsers.add_parser('create_resamplers', help='Generates resampling histograms from NTuples')
 create.set_defaults(func=create_resamplers)
 create.add_argument("location", help="Directory where grab_data downloaded the .root - files.")
-create.add_argument('--particles', nargs='*', help="Optional subset of particles for which calibration data will be downloaded. Choose from "+", ".join(particle_set))
+create.add_argument('--particles', nargs='*', help="Optional subset of particles for which resamplers will be created. Choose from "+", ".join(particle_set))
 create.add_argument('--cutstring', help="Optional cutstring. For example you can cut on the runNumber.")
+create.add_argument("--merge-magnet-orientations", dest='both_magnet_orientations', action='store_true', default=False, help='Create a resampler that combines the raw data for magup and mag down.')
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
 resample.add_argument("configfile")
 resample.add_argument("source_file")
 resample.add_argument("output_file")
-resample.add_argument("--use-clonetree", dest='use_clonetree', action='store_true', default=False)
 
 if __name__ == '__main__':
     options = parser.parse_args()

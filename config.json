@@ -1,16 +1,14 @@
 {
     "tasks": [
         {
-            "particle" : "Kaon",
             "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
             "features" : ["Kplus_P", "Kplus_LOKI_ETA", "nTracks"],
-            "pids" : [{"kind" : "K_V3ProbNNK", "name" : "Kplus_ProbNNk_corrected"}]
+            "pids" : [{"kind" : "K_CombDLLK", "name" : "Kplus_PIDK_corrected"}]
         },
         {
-            "particle" : "Kaon",
             "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
             "features" : ["Kminus_P", "Kminus_LOKI_ETA", "nTracks"],
-            "pids" : [{"kind" : "K_V3ProbNNK", "name" : "Kminus_ProbNNk_corrected"}]
+            "pids" : [{"kind" : "K_CombDLLK", "name" : "Kminus_PIDK_corrected"}]
         }
         ]
 }
