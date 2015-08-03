@@ -173,7 +173,7 @@ def resample_branch(options):
                     raise
 
     chunksize = 100000
-    for i, chunk in enumerate(read_root(options.source_file, ignore=["*_COV_"], chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.tree, ignore=["*_COV_"], chunksize=chunksize)):
         for task in config["tasks"]:
             deps = chunk[task["features"]]
             for pid in task["pids"]:
@@ -206,8 +206,9 @@ resample.set_defaults(func=resample_branch)
 resample.add_argument("configfile")
 resample.add_argument("source_file")
 resample.add_argument("output_file")
+resample.add_argument('--tree', help="Optional tree name to use. Should be used if you have multiple trees in file.")
 
 if __name__ == '__main__':
     options = parser.parse_args()
     options.func(options)
-    
+
