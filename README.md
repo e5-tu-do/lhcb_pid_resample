@@ -3,6 +3,11 @@
 Resample ("reweight") simulated values using clean data samples.
 The aim of this project is to simplify and accelerate the tedious task of resampling PIDs and other variables.
 
+## Caveats
+
+This package does not take into account correlations between PID variables, because it resamples them one by one.
+This can be important if PIDp and PIK are used at the same time, as these two variables are correlated in data.
+
 ## Requirements:
 
 * [`root_pandas`](https://github.com/ibab/root_pandas)
