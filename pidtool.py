@@ -105,6 +105,18 @@ def create_resamplers(options):
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
 
+    if options.binningFile and options.binningName:
+        import imp
+        try:
+            imp.load_source('userbinning', options.binningFile)
+        except IOError:
+            msg="Failed to load binning scheme file '{0}'".format(options.binningFile)
+            raise IOError(msg)
+        print("Using custom binning scheme defined in {0} with name {1}".format(options.binningFile, options.binningName))
+    else:
+        print("Using default binning scheme")
+        options.binningName = None
+
     pid_variables = ['{}_CombDLLK', '{}_CombDLLmu', '{}_CombDLLp', '{}_CombDLLe', '{}_V3ProbNNK', '{}_V3ProbNNpi', '{}_V3ProbNNmu', '{}_V3ProbNNp']
     kin_variables = ['{}_P', '{}_Eta','nTracks']
 
@@ -116,9 +128,9 @@ def create_resamplers(options):
     if options.both_magnet_orientations:
         locations = [sample for sample in locations if sample["magnet"]=="Up"] # we use both maagnet orientations on the first run
     for sample in locations:
-        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", None)) #last argument takes name of user-defined binning
-        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
-        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", None)) #last argument takes name of user-defined binning TODO: let user pass this argument
+        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", options.binningName)) #last argument takes name of user-defined binning
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binningName)) #last argument takes name of user-defined binning 
+        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", options.binningName)) #last argument takes name of user-defined binning
     	if options.both_magnet_orientations:
             if sample["magnet"]=="Up":  
                 data =  [options.location + '/{particle}_Stripping{stripping}_MagnetUp.root'  .format(**sample)]
@@ -200,6 +212,8 @@ create.add_argument("location", help="Directory where grab_data downloaded the .
 create.add_argument('--particles', nargs='*', help="Optional subset of particles for which resamplers will be created. Choose from "+", ".join(particle_set))
 create.add_argument('--cutstring', help="Optional cutstring. For example you can cut on the runNumber.")
 create.add_argument("--merge-magnet-orientations", dest='both_magnet_orientations', action='store_true', default=False, help='Create a resampler that combines the raw data for magup and mag down.')
+create.add_argument("--binningFile", type=str, default=None, help="File containing a user defined binning")
+create.add_argument("--binningName", type=str, default=None, help="Name of the used defined binning contained in <binningFile>")
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
