@@ -178,7 +178,7 @@ def resample_branch(options):
             deps = chunk[task["features"]]
             for pid in task["pids"]:
                 chunk[pid["name"]] = pid["resampler"].sample(deps.values.T)
-        chunk.to_root(options.output_file, mode="a")
+        chunk.to_root(options.output_file, options.tree.split("/")[-1], mode="a")
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
