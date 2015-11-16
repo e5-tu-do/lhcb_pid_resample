@@ -180,12 +180,12 @@ def resample_branch(options):
                     raise
 
     chunksize = 100000
-    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.tree, ignore=["*_COV_"], chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.input_tree, ignore=["*_COV_"], chunksize=chunksize)):
         for task in config["tasks"]:
             deps = chunk[task["features"]]
             for pid in task["pids"]:
                 chunk[pid["name"]] = pid["resampler"].sample(deps.values.T)
-        chunk.to_root(options.output_file, mode="a")
+        chunk.to_root(options.output_file, tree_key=options.output_tree, mode="a")
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
@@ -215,7 +215,8 @@ resample.set_defaults(func=resample_branch)
 resample.add_argument("configfile")
 resample.add_argument("source_file")
 resample.add_argument("output_file")
-resample.add_argument('--tree', help="Optional tree name to use. Should be used if you have multiple trees in file.")
+resample.add_argument('--input_tree', help="Path to tree in input file. Should be used if input file has nested structure or contains multiple trees.")
+resample.add_argument('--output_tree', help="Name of tree in output file. Sub-folders are not supported.")
 
 if __name__ == '__main__':
     options = parser.parse_args()
