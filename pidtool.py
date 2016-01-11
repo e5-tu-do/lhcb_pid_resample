@@ -105,6 +105,13 @@ def create_resamplers(options):
     from root_pandas import read_root
     from PIDPerfScripts.Binning import GetBinScheme
 
+    if options.binning_file:
+        import imp
+        try:
+            imp.load_source('userbinning', options.binning_file)
+        except IOError:
+            raise IOError("Failed to load binning scheme file '{scheme_file}'".format(scheme_file=options.binning_file))
+
     pid_variables = ['{}_CombDLLK', '{}_CombDLLmu', '{}_CombDLLp', '{}_CombDLLe', '{}_V3ProbNNK', '{}_V3ProbNNpi', '{}_V3ProbNNmu', '{}_V3ProbNNp']
     kin_variables = ['{}_P', '{}_Eta','nTracks']
 
@@ -116,9 +123,9 @@ def create_resamplers(options):
     if options.both_magnet_orientations:
         locations = [sample for sample in locations if sample["magnet"]=="Up"] # we use both maagnet orientations on the first run
     for sample in locations:
-        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", None)) #last argument takes name of user-defined binning
-        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", None)) #last argument takes name of user-defined binning TODO: let user pass this argument 
-        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", None)) #last argument takes name of user-defined binning TODO: let user pass this argument
+        binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", options.binning_name)) #last argument takes name of user-defined binning
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning 
+        binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", options.binning_name)) #last argument takes name of user-defined binning
     	if options.both_magnet_orientations:
             if sample["magnet"]=="Up":  
                 data =  [options.location + '/{particle}_Stripping{stripping}_MagnetUp.root'  .format(**sample)]
@@ -173,12 +180,12 @@ def resample_branch(options):
                     raise
 
     chunksize = 100000
-    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.tree, ignore=["*_COV_"], chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.input_tree, ignore=["*_COV_"], chunksize=chunksize)):
         for task in config["tasks"]:
             deps = chunk[task["features"]]
             for pid in task["pids"]:
                 chunk[pid["name"]] = pid["resampler"].sample(deps.values.T)
-        chunk.to_root(options.output_file, mode="a")
+        chunk.to_root(options.output_file, tree_key=options.output_tree, mode="a")
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
@@ -200,13 +207,16 @@ create.add_argument("location", help="Directory where grab_data downloaded the .
 create.add_argument('--particles', nargs='*', help="Optional subset of particles for which resamplers will be created. Choose from "+", ".join(particle_set))
 create.add_argument('--cutstring', help="Optional cutstring. For example you can cut on the runNumber.")
 create.add_argument("--merge-magnet-orientations", dest='both_magnet_orientations', action='store_true', default=False, help='Create a resampler that combines the raw data for magup and mag down.')
+create.add_argument("--binning_name", type=str, default=None, help="Parameter to specify a non-default binning.")
+create.add_argument("--binning_file", type=str, default=None, help="File containing a user-defined binning. The name of the user-defined binning must be passed via the --binning_name parameter.")
 
 resample = subparsers.add_parser('resample_branch', help='Uses histograms to add resampled PID branches to a dataset')
 resample.set_defaults(func=resample_branch)
 resample.add_argument("configfile")
 resample.add_argument("source_file")
 resample.add_argument("output_file")
-resample.add_argument('--tree', help="Optional tree name to use. Should be used if you have multiple trees in file.")
+resample.add_argument('--input_tree', help="Path to tree in input file. Should be used if input file has nested structure or contains multiple trees.")
+resample.add_argument('--output_tree', help="Name of tree in output file. Sub-folders are not supported.")
 
 if __name__ == '__main__':
     options = parser.parse_args()
