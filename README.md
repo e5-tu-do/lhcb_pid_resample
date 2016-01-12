@@ -5,8 +5,7 @@ The aim of this project is to simplify and accelerate the tedious task of resamp
 
 ## Caveats
 
-This package does not take into account correlations between PID variables, because it resamples them one by one.
-This can be important if PIDp and PIK are used at the same time, as these two variables are correlated in data.
+This package resamples PID variables one by one. Therefore it doesn't reflect the correlations between them, except for those that already originate from correlations to the kinematic variables that we resample from.
 
 ## Requirements:
 
