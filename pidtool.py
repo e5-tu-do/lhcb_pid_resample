@@ -164,6 +164,9 @@ def resample_branch(options):
     except OSError:
         pass
 
+    if options.seed:
+        np.random.seed(options.seed)
+
     with open(options.configfile) as f:
         config = json.load(f)
 
@@ -217,6 +220,7 @@ resample.add_argument("source_file")
 resample.add_argument("output_file")
 resample.add_argument('--input_tree', help="Path to tree in input file. Should be used if input file has nested structure or contains multiple trees.")
 resample.add_argument('--output_tree', help="Name of tree in output file. Sub-folders are not supported.")
+resample.add_argument('--seed', default=None, type=int, help="Random seed.")
 
 if __name__ == '__main__':
     options = parser.parse_args()
