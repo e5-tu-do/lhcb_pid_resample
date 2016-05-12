@@ -124,10 +124,10 @@ def create_resamplers(options):
         locations = [sample for sample in locations if sample["magnet"]=="Up"] # we use both maagnet orientations on the first run
     for sample in locations:
         binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", options.binning_name)) #last argument takes name of user-defined binning
-        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning 
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning
         binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", options.binning_name)) #last argument takes name of user-defined binning
     	if options.both_magnet_orientations:
-            if sample["magnet"]=="Up":  
+            if sample["magnet"]=="Up":
                 data =  [options.location + '/{particle}_Stripping{stripping}_MagnetUp.root'  .format(**sample)]
                 data += [options.location + '/{particle}_Stripping{stripping}_MagnetDown.root'.format(**sample)]
                 resampler_location = '{particle}_Stripping{stripping}_MagnetAny.pkl'.format(**sample)
@@ -148,7 +148,7 @@ def create_resamplers(options):
                 raise Exception
             resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, target_binning)
         for dataSet in data:
-            for i, chunk in enumerate(read_root(dataSet, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set 
+            for i, chunk in enumerate(read_root(dataSet, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set
                 for pid in pids:
                     resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
                 logging.info('Finished chunk {}'.format(i))
@@ -165,7 +165,7 @@ def resample_branch(options):
         pass
 
     with open(options.configfile) as f:
-        config = json.load(f)   
+        config = json.load(f)
 
     #load resamplers into config dictionary
     for task in config["tasks"]:
