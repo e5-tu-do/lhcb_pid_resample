@@ -9,7 +9,7 @@ import os
 
 logging.basicConfig(level=logging.INFO)
 
-class Resampler:
+class Resampler(object):
 
     def __init__(self, *args):
         # Choose histogram size according to bin edges
