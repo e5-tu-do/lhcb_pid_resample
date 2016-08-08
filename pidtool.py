@@ -126,7 +126,7 @@ def create_resamplers(options):
         binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", options.binning_name)) #last argument takes name of user-defined binning
         binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning 
         binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", options.binning_name)) #last argument takes name of user-defined binning
-    	if options.both_magnet_orientations:
+        if options.both_magnet_orientations:
             if sample["magnet"]=="Up":  
                 data =  [options.location + '/{particle}_Stripping{stripping}_MagnetUp.root'  .format(**sample)]
                 data += [options.location + '/{particle}_Stripping{stripping}_MagnetDown.root'.format(**sample)]
