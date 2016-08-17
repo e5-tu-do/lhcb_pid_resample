@@ -9,7 +9,7 @@ import os
 
 logging.basicConfig(level=logging.INFO)
 
-class Resampler:
+class Resampler(object):
 
     def __init__(self, *args):
         # Choose histogram size according to bin edges
@@ -124,7 +124,7 @@ def create_resamplers(options):
         locations = [sample for sample in locations if sample["magnet"]=="Up"] # we use both maagnet orientations on the first run
     for sample in locations:
         binning_P = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "P", options.binning_name)) #last argument takes name of user-defined binning
-        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning 
+        binning_ETA = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "ETA", options.binning_name)) #last argument takes name of user-defined binning
         binning_nTracks = rooBinning_to_list(GetBinScheme(sample['branch_particle'], "nTracks", options.binning_name)) #last argument takes name of user-defined binning
         if options.both_magnet_orientations:
             if sample["magnet"]=="Up":  
@@ -148,7 +148,7 @@ def create_resamplers(options):
                 raise Exception
             resamplers[pid] = Resampler(binning_P, binning_ETA, binning_nTracks, target_binning)
         for dataSet in data:
-            for i, chunk in enumerate(read_root(dataSet, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set 
+            for i, chunk in enumerate(read_root(dataSet, columns=deps + pids + ['nsig_sw'], chunksize=100000, where=options.cutstring)): # where is None if option is not set
                 for pid in pids:
                     resamplers[pid].learn(chunk[deps + [pid]].values.T, weights=chunk['nsig_sw'])
                 logging.info('Finished chunk {}'.format(i))
@@ -164,8 +164,11 @@ def resample_branch(options):
     except OSError:
         pass
 
+    if options.seed:
+        np.random.seed(options.seed)
+
     with open(options.configfile) as f:
-        config = json.load(f)   
+        config = json.load(f)
 
     #load resamplers into config dictionary
     for task in config["tasks"]:
@@ -217,6 +220,7 @@ resample.add_argument("source_file")
 resample.add_argument("output_file")
 resample.add_argument('--input_tree', help="Path to tree in input file. Should be used if input file has nested structure or contains multiple trees.")
 resample.add_argument('--output_tree', help="Name of tree in output file. Sub-folders are not supported.")
+resample.add_argument('--seed', default=None, type=int, help="Sets a seed for the random number generator to make the resampling reproducible.")
 
 if __name__ == '__main__':
     options = parser.parse_args()
