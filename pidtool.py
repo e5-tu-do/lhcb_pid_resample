@@ -183,12 +183,12 @@ def resample_branch(options):
                     raise
 
     chunksize = 100000
-    for i, chunk in enumerate(read_root(options.source_file, tree_key=options.input_tree, ignore=["*_COV_"], chunksize=chunksize)):
+    for i, chunk in enumerate(read_root(options.source_file, key=options.input_tree, ignore=["evname","year","*_COV_"], chunksize=chunksize)):
         for task in config["tasks"]:
             deps = chunk[task["features"]]
             for pid in task["pids"]:
                 chunk[pid["name"]] = pid["resampler"].sample(deps.values.T)
-        chunk.to_root(options.output_file, tree_key=options.output_tree, mode="a")
+        chunk.to_root(options.output_file, key=options.output_tree, mode="a")
         logging.info('Processed {} entries'.format((i+1) * chunksize))
 
 
