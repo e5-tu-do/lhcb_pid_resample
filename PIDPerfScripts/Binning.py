@@ -1,9 +1,11 @@
+# THIS FILE IS COPIED FROM THE PIDCalib package from the LHCbSoftware stack
+
 import ROOT
 from PIDPerfScripts.Definitions import *
 
 __all__=('CheckBinScheme', 'AddBinScheme',
          'SetDefaultBinScheme', 'AddUniformBins',
-         'AddBinBoundary', 'GetBinScheme')      
+         'AddBinBoundary', 'GetBinScheme')
 
 _BinSchemes={}
 for trackType in GetPartTypes():
@@ -34,7 +36,7 @@ Return True if the requested scheme name is found."""
             return False
     return True
 
-def AddBinScheme(trackType, varName, schemeName, xMin, xMax, 
+def AddBinScheme(trackType, varName, schemeName, xMin, xMax,
     replaceCurrentScheme=False):
     """Adds a new scheme with the requested scheme name for the specified """
     """track type and bin variable with bin range [xMin, xMax].
@@ -48,9 +50,9 @@ If 'replaceCurrentScheme' is False, then a KeyError will be raised """
         "for track type '{tname}', variable '{vname}'.").format(
             sname=schemeName, tname=trackType, vname=varName)
         raise KeyError(msg)
-        
-                       
-    _BinSchemes[trackType][varName][schemeName]=ROOT.RooBinning(xMin, xMax, 
+
+
+    _BinSchemes[trackType][varName][schemeName]=ROOT.RooBinning(xMin, xMax,
         varName)
 
 def SetDefaultBinScheme(trackType, varName, schemeName):
@@ -62,7 +64,7 @@ Raises a KeyError if a scheme with the requested name does not exist."""
     CheckBinScheme(trackType, varName, schemeName)
     _BinSchemes[trackType][varName]['default']=ROOT.RooBinning(
         _BinSchemes[trackType][varName][schemeName], varName)
-    
+
 def AddUniformBins(trackType, varName, schemeName, nBins, xMin, xMax):
     """Adds 'nBins' bins, uniform in the range [xMin, xMax] to the binning """
     """scheme of the specified track type and bin variable.
@@ -76,7 +78,7 @@ def AddBinBoundary(trackType, varName, schemeName, boundary):
 Raises a KeyError if a scheme with the requested name does not exist."""
     CheckBinScheme(trackType, varName, schemeName)
     _BinSchemes[trackType][varName][schemeName].addBoundary(boundary)
-    
+
 def GetBinScheme(trackType, varName, schemeName=None):
     """Returns a copy of the requested binning scheme (we don't want the """
     """user to modify the original scheme).
@@ -153,7 +155,7 @@ for trType in GetMuonPIDPartTypes():
     momBoundaries = (6000, 8000, 10000, 12000, 14500, 17500, 21500, 27000,
                      32000, 40000, 60000, 70000)
     for boundary in momBoundaries:
-        AddBinBoundary(trType, 'P', 'DLLKpi_MuonUnBiased', boundary) 
+        AddBinBoundary(trType, 'P', 'DLLKpi_MuonUnBiased', boundary)
 
     # eta
     AddBinScheme(trType, 'ETA', 'DLLKpi_MuonUnBiased', 1.5, 5)
@@ -169,7 +171,7 @@ for trType in GetMuonPIDPartTypes():
 
 for trType in ('K', 'Pi'):
     ## for K/pi ID/misID performance plots
-    
+
     # momentum
     AddBinScheme(trType, 'P', 'PerfPlots_KPi', 2000, 100000)
     AddUniformBins(trType, 'P', 'PerfPlots_KPi', 40, 2000, 100000)
@@ -184,7 +186,7 @@ for trType in ('K', 'Pi'):
 
 for trType in ('P', 'Pi'):
     ### for P/pi ID/misID performance plots
-    
+
     # momentum
     AddBinScheme(trType, 'P', 'PerfPlots_PPi', 5000, 100000)
     AddUniformBins(trType, 'P', 'PerfPlots_PPi', 38, 5000, 100000)
@@ -244,7 +246,7 @@ for trType in ('Mu', 'P_MuonUnBiased'):
 
 for trType in ('e', 'Pi'):
     ### for e/pi ID/misID performance plots
-    
+
     # momentum
     AddBinScheme(trType, 'P', 'PerfPlots_ePi', 5000, 100000)
     AddUniformBins(trType, 'P', 'PerfPlots_ePi', 38, 5000, 100000)
@@ -285,21 +287,21 @@ for trType in GetPartTypes():
     for realPart in [p.lower() for p in GetRealPartTypes()]:
         if realPart == "k":
             realPart = "K"
-        
+
         if realPart != "pi":
             AddBinScheme(trType, 'DLL%s'%(realPart), 'PerfPlots_%s'%(trType), -100, 50)
             AddUniformBins(trType, 'DLL%s'%(realPart), 'PerfPlots_%s'%(trType), 100, -100, 50)
 
         AddBinScheme(trType, 'V2ProbNN%s'%(realPart), 'PerfPlots_%s'%(trType), 0, 1)
         AddUniformBins(trType, 'V2ProbNN%s'%(realPart), 'PerfPlots_%s'%(trType), 20, 0, 1)
-            
+
         if realPart != "mu":
             AddBinScheme(trType, 'RICHThreshold_%s'%(realPart), 'PerfPlots_%s'%(trType), -2, 2)
             AddUniformBins(trType, 'RICHThreshold_%s'%(realPart), 'PerfPlots_%s'%(trType), 4, -2, 2)
 
     AddBinScheme(trType, 'DLLe', 'PerfPlots_%s'%(trType), -15, 20, replaceCurrentScheme=True)
     AddUniformBins(trType, 'DLLe', 'PerfPlots_%s'%(trType), 100, -15, 20)
-            
+
     AddBinScheme(trType, 'InMuonAcc', 'PerfPlots_%s'%(trType), 0, 2)
     AddUniformBins(trType, 'InMuonAcc', 'PerfPlots_%s'%(trType), 2, 0, 2)
 

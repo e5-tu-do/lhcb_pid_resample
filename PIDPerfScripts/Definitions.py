@@ -1,3 +1,5 @@
+# THIS FILE IS COPIED FROM THE PIDCalib package from the LHCbSoftware stack
+
 import re
 import math
 
@@ -377,7 +379,3 @@ def CheckVarName(VarName):
         msg=("Invalid binning variable '{0}'. "
              "Allowed variables are {1}").format(VarName, str(ValidVarNames))
         raise TypeError(msg)
-
-
-
-

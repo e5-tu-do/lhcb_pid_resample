@@ -1,3 +1,5 @@
+# THIS FILE IS COPIED FROM THE PIDCalib package from the LHCbSoftware stack
+
 import exceptions
 
 class GetEnvError(exceptions.Exception):
@@ -11,5 +13,3 @@ class RooWorkspaceError(exceptions.Exception):
 
 class RooDataSetError(exceptions.Exception):
     pass
-  
-  
