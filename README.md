@@ -69,14 +69,36 @@ To create resamplers for all particle types and PID types, do
 
     python pidtool.py create_resamplers <input>
 
-Where  `<input>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs. Lastly, there is `--merge-magnet-orientations`, which let's you create resamplers that combine the raw data for magUp and magDown. 
+Where  `<input>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs. Lastly, there is `--merge-magnet-orientations`, which let's you create resamplers that combine the raw data for magUp and magDown.
 
 ### 4. Run the resampling
 The command
 
-    python pidtool.py resample_branch <configfile> <source_file> <output_file>
+    python pidtool.py resample_branch [-h] [--num_cpu NUM_CPU] [--tree TREE]
+                                  [--outputtree OUTPUTTREE] [--transform]
+                                  configfile source_file
 
-will run the resampling. `<source_file`> is the root file containing the simulated data and `<output_file>` can be chosen freely. An example config-file called `config.json` is part of the repository. In the configurations file, the options are:
+    positional arguments:
+      configfile
+      source_file
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --num_cpu NUM_CPU, -n NUM_CPU
+                            Number of cpus used for resampling
+                            More processes than variables that are resampled
+                            do not make sense, but are not harmful
+      --tree TREE           Optional tree name to use. Should be used if you have
+                            multiple trees in file.
+      --outputtree OUTPUTTREE
+                            Optional tree name to use. Should be used if you have
+                            multiple trees in file or if you have a slash in your
+                            tree name.
+      --transform           Perform in place back transformation for ProbNN
+                            variables
+
+
+will run the resampling. `<source_file`> is the root file containing the simulated data and that will **be edited in place**. An example config-file called `config.json` is part of the repository. In the configurations file, the options are:
 * `tasks` : A list of resampling-tasks. Create a task for every particle for which you want to resample PIDs.
   * `resampler_path` : Path to resampler pickle-file to be used for resampling. The resampler name will contain the `particle` - name, the stripping version and the magnet orientation.
   * `pids` : List of all pid branches to be created for this particle.
