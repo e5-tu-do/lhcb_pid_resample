@@ -67,9 +67,9 @@ A resampler is a worker object that performs the resampling for a specific parti
 
 To create resamplers for all particle types and PID types, do
 
-    python pidtool.py create_resamplers <output>
+    python pidtool.py create_resamplers <input>
 
-Where  `<output>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs. Lastly, there is `--merge-magnet-orientations`, which let's you create resamplers that combine the raw data for magUp and magDown. 
+Where  `<input>` is the directory where `grab_data` downloaded the `.root` - files. Like before, you can limit yourself to a selection of particle types using the `--particles` option. It is also possible to apply a cutstring to the downloaded data using `--cutstring <cutstring>`. This can for example be used to restrict the raw data to certain runs. Lastly, there is `--merge-magnet-orientations`, which let's you create resamplers that combine the raw data for magUp and magDown. 
 
 ### 4. Run the resampling
 The command
