@@ -5,10 +5,20 @@ import itertools
 import numpy as np
 import math
 from argparse import ArgumentParser
-from get_any_tree import get_any_tree
-#import progressbar
 import os.path
 
+def get_any_tree(tfilepath):
+    '''
+    If given a root file with only one tree, this function will return the name the tree.
+    '''
+    from root_numpy import list_trees
+    trees = list_trees(tfilepath)
+    if len(trees) == 1:
+        tree_name = trees[0]
+    else:
+        raise ValueError('More than one tree found in {}'.format(tfilepath))
+
+    return tree_name
 
 def back_transform(var):
     '''
