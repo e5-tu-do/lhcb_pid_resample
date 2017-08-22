@@ -32,7 +32,7 @@ class Resampler:
 
     def copy(self):
         '''
-        Creats a copy of the resampler
+        Creates a copy of the resampler
         '''
         rv = Resampler()
         rv.edges = list(self.edges)
@@ -96,14 +96,14 @@ def grab_data(options):
             yield elem
             elem = it.Next()
 
-    logging.info("Saving nTuples to " + options.output)
+    logging.info('Saving nTuples to ' + options.output)
 
     with open(options.config) as f:
         locations = json.load(f)
     if options.particles is not None:
         locations = [
             sample
-            for sample in locations if sample["particle"] in options.particles
+            for sample in locations if sample['particle'] in options.particles
         ]
 
     for sample in locations:
@@ -178,29 +178,29 @@ def create_resamplers(options):
     if options.particles:
         locations = [
             sample
-            for sample in locations if sample["particle"] in options.particles
+            for sample in locations if sample['particle'] in options.particles
         ]
     if options.both_magnet_orientations:
         # we use both maagnet orientations on the first run
         locations = [
-            sample for sample in locations if sample["magnet"] == "Up"
+            sample for sample in locations if sample['magnet'] == 'Up'
         ]
     for sample in locations:
         # last argument takes name of user-defined binning
         binning_P = rooBinning_to_list(
-            GetBinScheme(sample['branch_particle'], "P", None)
+            GetBinScheme(sample['branch_particle'], 'P', None)
         )
         # last argument takes name of user-defined binning
         # TODO: let user pass this argument
         binning_ETA = rooBinning_to_list(
-            GetBinScheme(sample['branch_particle'], "ETA", None)
+            GetBinScheme(sample['branch_particle'], 'ETA', None)
         )
         # last argument takes name of user-defined binning
         # TODO: let user pass this argument
         binning_nTracks = rooBinning_to_list(GetBinScheme(
-            sample['branch_particle'], "nTracks", None))
+            sample['branch_particle'], 'nTracks', None))
         if options.both_magnet_orientations:
-            if sample["magnet"] == "Up":
+            if sample['magnet'] == 'Up':
                 data = [
                     options.location +
                     '/{particle}_Stripping{stripping}_MagnetUp.root'.format(
@@ -238,13 +238,13 @@ def create_resamplers(options):
             lambda x: x.format(sample['branch_particle']), pid_variables
         )
         for pid in pids:
-            if "DLL" in pid:
+            if 'DLL' in pid:
                 # binning for DLL
                 target_binning = np.linspace(-150, 150, 300)
-            elif "ProbNN" in pid and "Trafo" in pid:
+            elif 'ProbNN' in pid and 'Trafo' in pid:
                 # binning for transformed ProbNN
                 target_binning = np.linspace(-30, 30, 300)
-            elif "ProbNN" in pid:
+            elif 'ProbNN' in pid:
                 # binning for (raw) ProbNN
                 target_binning = np.linspace(0, 1, 100)
             else:
@@ -269,11 +269,17 @@ def create_resamplers(options):
 
 
 def resample_branch(options):
+    from copy import deepcopy
+    for source_file in options.source_files:
+        opt = deepcopy(options)
+        opt.source_file = source_file
+        _resample_branch(opt)
+
+def _resample_branch(options):
     import pickle
     from root_numpy import tree2array, array2tree, list_branches
     from root_pandas import read_root
     from pandas import DataFrame
-
     logging.info('Starting resampling for {}'.format(
         options.source_file
     ))
@@ -287,34 +293,61 @@ def resample_branch(options):
 
     logging.info('Checking tasks...')
     pid_names = []
-    for task in config["tasks"]:
-        for pid in task["pids"]:
-            pid_names.append(pid["name"])
-            if options.transform and 'Trafo' in pid["name"]:
-                pid_names.append(pid["name"].replace("Trafo", "Untrafo"))
+    for task in config['tasks']:
+        for pid in task['pids']:
+            pid_names.append(pid['name'])
+            if options.transform and 'Trafo' in pid['name']:
+                pid_names.append(pid['name'].replace('Trafo', 'Untrafo'))
 
     if all([pid_name in branches_in_file for pid_name in pid_names]):
         raise Exception(
-            'Branches exist - resampling seems already to be done.')
+            'Branches exist - resampling seems to be done already.')
 
     logging.info('Loading resamplers...')
-    # load resamplers into config dictionary
-    for task in config["tasks"]:
-        with open(task["resampler_path"], 'rb') as f:
-            resamplers = pickle.load(f)
-            for pid in task["pids"]:
-                try:
-                    pid["resampler"] = resamplers[pid["kind"]]
-                except KeyError:
-                    print(resamplers)
-                    logging.error(
-                        "No resampler found for {kind} in {picklefile}".format(
-                            kind=pid["kind"], picklefile=task["resampler_path"]
-                        )
-                    )
-                    raise
 
-    needed_branches = [f for task in config["tasks"] for f in task['features']]
+    trueid_branches = []
+    prefix_dict = {}
+    # load resamplers into config dictionary
+    resamplers = {}
+
+    use_trueid = 'trueid' in config['tasks'][0]
+    for task in config['tasks'][1:]:
+        if use_trueid and not 'trueid' in task \
+                or not use_trueid and 'trueid' in task:
+            logging.error(
+                    'Specify true ids on all tasks or on no task.')
+            exit()
+
+
+    for task in config['tasks']:
+        if 'trueid_branch' in task:
+            trueid_branches.append(task['trueid_branch'])
+        with open(task['resampler_path'], 'rb') as f:
+            try:
+                resampler = pickle.load(f)
+            except UnicodeDecodeError: # pickled with python2
+                resampler = pickle.load(f, encoding='latin1')
+
+            for trueid in task.get('trueid', [None]):
+                resamplers[trueid] = resamplers.get(trueid, {})
+                if trueid is None:
+                    prefix_dict[trueid] = None
+                else:
+                    prefix_dict[trueid] = task['pids'][0]['kind'].split('_')[0]
+
+                for pid in task['pids']:
+                    if not pid['kind'] in resampler:
+                        logging.error(
+                            'No resampler found for {kind} in {picklefile}'.format(
+                                kind=pid['kind'], picklefile=task['resampler_path']
+                            )
+                        )
+                        exit()
+
+                    resamplers[trueid][pid['kind']] = resampler[pid['kind']]
+
+
+    needed_branches = [f for task in config['tasks'] for f in task['features']]
 
     # check if eta is in the tuple, if not store in a list to calculate later
     pseudorapidities_to_calculate = list()
@@ -330,7 +363,7 @@ def resample_branch(options):
                 needed_branches[idx] = head + '_P'
                 needed_branches.append(head + '_PZ')
             else:
-                logging.error("I dont know how to calculate".format(b))
+                logging.error('I dont know how to calculate {}'.format(b))
                 exit()
     needed_branches = list(set(needed_branches))
 
@@ -340,7 +373,7 @@ def resample_branch(options):
 
     chunksize = 300000
     for i, chunk in enumerate(read_root(options.source_file, options.tree,
-                                        columns=needed_branches,
+                                        columns=needed_branches+trueid_branches,
                                         chunksize=chunksize)):
 
         for ps in pseudorapidities_to_calculate:
@@ -350,45 +383,55 @@ def resample_branch(options):
             chunk[ps + '_eta'] = 0.5 * np.log((p + pz) / (p - pz))
 
         resampled_data_chunk = DataFrame()
-        p = mp.Pool(processes=options.num_cpu)
         var_name = []
         args = []
 
-        for task in config["tasks"]:
-            deps = chunk[task["features"]]
-            for pid in task["pids"]:
-                if not pid['name'] in branches_in_file:
-                    var_name.append(pid['name'])
-                    args.append((pid["resampler"], deps.values.T))
-                else:
-                    logging.info('Skpping {}, branch already exists'.format(
+        for task in config['tasks']:
+            deps = chunk[task['features']]
+
+            if 'trueid_branch' in task:
+                trueid = chunk[task['trueid_branch']]
+            else:
+                trueid = None
+
+            for pid in task['pids']:
+                if pid['name'] in branches_in_file:
+                    logging.info('Skipping {}, branch already exists'.format(
                         pid['name']))
+                    continue
 
-        resampled = p.map_async(resample_thread, args).get()
+                var_name.append(pid['name'])
+                args.append(
+                    (resamplers, deps.values.T, trueid, pid['kind'], prefix_dict)
+                )
 
+        with mp.Pool(processes=options.num_cpu) as p:
+            resampled = p.map(resample_process, args)
+
+        # transform branches back
         for idx, var in enumerate(var_name):
             resampled_data_chunk[var] = resampled[idx]
             if 'Trafo' in var and options.transform:
                 logging.info('Back trafo for {}'.format(var))
-                resampled_data_chunk[var.replace("Trafo", "Untrafo")] = \
+                resampled_data_chunk[var.replace('Trafo', 'Untrafo')] = \
                     back_transform(resampled[idx])
 
         logging.info('Processed {} entries'.format((i+1) * chunksize))
         resampled_data = resampled_data.append(resampled_data_chunk,
                                                ignore_index=True)
 
-        # close the pool, wait for the processes to end and then
-        # terminate them
-        p.close()
-        p.join()
-        p.terminate()
+        # # close the pool, wait for the processes to end and then
+        # # terminate them
+        # p.close()
+        # p.join()
+        # p.terminate()
 
     logging.info('Writing output...')
     f = R.TFile(options.source_file, 'UPDATE')
     t = f.Get(options.tree)
     if '/' in options.tree:
         t_path = options.tree.split('/')[:-1]
-        t_dir = f.Get("/".join(t_path))
+        t_dir = f.Get('/'.join(t_path))
         t_dir.cd()
     print(resampled_data.tail())
     array2tree(resampled_data.to_records(index=False),
@@ -397,9 +440,34 @@ def resample_branch(options):
     f.Close()
 
 
-def resample_thread(res_deps):
-    return res_deps[0].sample(res_deps[1])
+def resample_process(res_deps):
+    resamplers, deps, trueid, pid, prefix_dict = res_deps
+    res = np.zeros(deps.shape[1])
+    mask = np.ones(deps.shape[1], dtype=bool)
 
+    for t in prefix_dict:
+        if t is None:
+            res = resamplers[t][pid].sample(deps)
+            mask = False
+            continue
+
+        idx = trueid == t
+        mask[idx] = False
+        pid_tail = '_'.join(pid.split('_')[1:])
+        pid_name = '_'.join([prefix_dict[t], pid_tail])
+        res[idx] = resamplers[t][pid_name].sample(deps[:, idx])
+    res[mask] = -9999
+
+    # # count sum(trueid==x)
+    # d = {}
+    # for t in trueid:
+        # d[t] = d.get(t, 0) + 1
+    # from pprint import pprint
+    # pprint(d)
+    # print('invalid entries: {}'.format(np.sum(mask)))
+    # print('valid entries: {}'.format(np.sum(1-mask)))
+
+    return res
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers()
@@ -409,17 +477,17 @@ grab = subparsers.add_parser(
     help='Downloads PID calib data from EOS and saves it as NTuples'
 )
 grab.set_defaults(func=grab_data)
-grab.add_argument('-c', '--config', default="raw_data.json",
-                  help="Config-file with raw_data in it."
-                  " Default: raw_data.json")
+grab.add_argument('-c', '--config', default='raw_data.json',
+                  help='Config-file with raw_data in it.'
+                  ' Default: raw_data.json')
 grab.add_argument(
     'output',
-    help="Directory where grabbed data is being stored."
+    help='Directory where grabbed data is being stored.'
 )
 grab.add_argument(
     '--particles', nargs='*',
-    help="Optional subset of particles for which calibration data will be "
-    "downloaded."
+    help='Optional subset of particles for which calibration data will be '
+    'downloaded.'
 )
 
 
@@ -427,32 +495,32 @@ create = subparsers.add_parser(
     'create_resamplers', help='Generates resampling histograms from NTuples'
 )
 create.set_defaults(func=create_resamplers)
-create.add_argument("location", help="Directory where input files are stored.")
+create.add_argument('location', help='Directory where input files are stored.')
 create.add_argument(
-    "saveto",
-    help="Directory where to save the resamplers as .pkl - files."
+    'saveto',
+    help='Directory where to save the resamplers as .pkl - files.'
 )
 create.add_argument(
     '--particles', nargs='*',
-    help="Optional subset of particles for which resamplers will be created."
+    help='Optional subset of particles for which resamplers will be created.'
 )
 create.add_argument(
     '--cutstring',
-    help="Optional cutstring. For example you can cut on the runNumber."
+    help='Optional cutstring. For example you can cut on the runNumber.'
 )
 create.add_argument(
-    "--merge-magnet-orientations", dest='both_magnet_orientations',
+    '--merge-magnet-orientations', dest='both_magnet_orientations',
     action='store_true', default=False,
     help='Create a resampler that combines the raw data for magup and magdown.'
 )
 create.add_argument(
-    '-c', '--config', default="raw_data.json",
-    help="Config-file with raw_data in it. Default: raw_data.json"
+    '-c', '--config', default='raw_data.json',
+    help='Config-file with raw_data in it. Default: raw_data.json'
 )
 create.add_argument(
     '--tree',
-    help="Optional tree name to use. Has to be used if you have multiple trees"
-    " in file or have several subsets of the same tree."
+    help='Optional tree name to use. Has to be used if you have multiple trees'
+    ' in file or have several subsets of the same tree.'
 )
 
 
@@ -461,24 +529,24 @@ resample = subparsers.add_parser(
     help='Uses histograms to add resampled PID branches to a dataset'
 )
 resample.set_defaults(func=resample_branch)
-resample.add_argument("configfile")
-resample.add_argument("source_file")
-# resample.add_argument("output_file")
+resample.add_argument('configfile')
+resample.add_argument('source_files', nargs='+')
+# resample.add_argument('output_file')
 resample.add_argument(
-    "--num_cpu",
-    "-n",
-    help="Number of cpus used for resampling",
+    '--num_cpu',
+    '-n',
+    help='Number of cpus used for resampling',
     default=1,
     type=int
 )
 resample.add_argument(
-    '--tree', help="Optional tree name to use. Should be used if you have "
-    "multiple trees in file."
+    '--tree', help='Optional tree name to use. Should be used if you have '
+    'multiple trees in file.'
 )
 resample.add_argument(
     '--outputtree',
-    help="Optional tree name to use. Should be used if you have multiple trees"
-    " in file or if you have a slash in your tree name."
+    help='Optional tree name to use. Should be used if you have multiple trees'
+    ' in file or if you have a slash in your tree name.'
 )
 resample.add_argument(
     '--transform', action='store_true',
@@ -486,8 +554,6 @@ resample.add_argument(
 )
 
 if __name__ == '__main__':
-#    import multiprocessing as mp
-#    mp.set_start_method('spawn')
-
     options = parser.parse_args()
+
     options.func(options)

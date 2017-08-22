@@ -3,11 +3,15 @@
         {
             "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
             "features" : ["Kplus_P", "Kplus_LOKI_ETA", "nTracks"],
+            "trueid": [321, -321],
+            "trueid_branch": "Kplus_TRUEID",
             "pids" : [{"kind" : "K_CombDLLK", "name" : "Kplus_PIDK_corrected"}]
         },
         {
             "resampler_path" : "/fhgfs/groups/e5/lhcb/analysis/Common/PIDCalib/Kaon_Stripping20_MagnetUp.pkl",
             "features" : ["Kminus_P", "Kminus_LOKI_ETA", "nTracks"],
+            "trueid": [321, -321],
+            "trueid_branch": "Kminus_TRUEID",
             "pids" : [{"kind" : "K_CombDLLK", "name" : "Kminus_PIDK_corrected"}]
         }
         ]
