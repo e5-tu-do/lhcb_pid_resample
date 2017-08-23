@@ -61,9 +61,11 @@ For more information and a list of possible particles type `python pidtool.py gr
 
 *There is a known issue where the download causes a segfault after completing. If this happens to you, please make sure you have downloaded all the data by checking the `raw_data.json` file.*
 
+For ProbNN variables, a transformation of the Calibration samples should be carried out first. For example `python TrafoProbNN.py -i <path_to_input> -o <path_to_output> --match ProbNN -t <tree>` will look for all variables with ProbNN in the name, and transform only those. Then continue with the next step.
+
 ### 3. Create resamplers
 
-A resampler is a worker object that performs the resampling for a specific particle and PID type. Resamplers can be created only for particles types whose data has been downloaded.
+A resampler is a worker object that performs the resampling for a specific particle and PID type. Resamplers can be created only for particles types whose data has been downloaded (and might have been transformed as detailed in the step before).
 
 To create resamplers for all particle types and PID types, do
 
