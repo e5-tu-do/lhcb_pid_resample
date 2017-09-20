@@ -441,14 +441,17 @@ def resample_process(res_deps):
     for t in prefix_dict:
         if t is None:
             res = resamplers[t][pid].sample(deps)
-            mask = False
+            mask[:] = False
             continue
 
         idx = np.array(trueid == t, dtype=bool)
+        if (idx == False).all(): continue
+
         mask[idx] = False
         pid_tail = '_'.join(pid.split('_')[1:])
         pid_name = '_'.join([prefix_dict[t], pid_tail])
         res[idx] = resamplers[t][pid_name].sample(deps[:, idx])
+
     res[mask] = -9999
 
     return res
