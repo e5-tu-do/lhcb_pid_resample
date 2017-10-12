@@ -317,7 +317,7 @@ def _resample_branch(options):
             logging.error('Specify true ids on all tasks or on no task.')
             exit()
 
-    for task in config['tasks']:
+    for task in config['tasks'] + config.get('backgrounds', []):
         if 'trueid_branch' in task:
             trueid_branches.append(task['trueid_branch'])
         with open(task['resampler_path'], 'rb') as f:
