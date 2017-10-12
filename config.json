@@ -19,7 +19,6 @@
           {
               "resampler_path" : "P_Stripping20_MagnetDown.pkl",
               "trueid": [2212, -2212],
-              "pids" : [
               "pids" : [{"kind" : "P_CombDLLK"}]
           }
     ]
