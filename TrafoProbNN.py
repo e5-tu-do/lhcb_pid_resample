@@ -131,7 +131,22 @@ if __name__ == '__main__':
     else:
         inputtreename = options.Tree
 
-    inputtree = inputfile.Get(inputtreename)
+    from root_numpy import list_trees
+    trees = list_trees(options.Input)
+
+    # If data was downloaded with grab_data method, you end up with many trees in your file
+    if len(trees) > 1:
+        inputtree=ROOT.TChain("tree")
+        for i in range(1,len(trees)+1):
+            filename = options.Input + "/tree;{}".format(i)
+            status = inputtree.Add(filename,-1)
+            if status == 0:
+                break
+    else:
+        inputtree = inputfile.Get(inputtreename)
+
+
+    print 'Entries', inputtree.GetEntries()
 
     outputfile = options.Output
 
